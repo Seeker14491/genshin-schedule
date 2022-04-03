@@ -1,10 +1,10 @@
 FROM mcr.microsoft.com/dotnet/sdk:5.0 AS build
 WORKDIR /genshin
 
-COPY GenshinSchedule.SyncServer.csproj ./
+COPY ./sync/GenshinSchedule.SyncServer.csproj ./
 RUN dotnet restore
 
-COPY . ./
+COPY ./sync/ ./
 RUN dotnet build -c Release -o build --no-restore
 
 FROM mcr.microsoft.com/dotnet/aspnet:5.0

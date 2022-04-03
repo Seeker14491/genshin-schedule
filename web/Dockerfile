@@ -1,7 +1,7 @@
 FROM node:lts-alpine AS build
 WORKDIR /genshin
 
-COPY package.json yarn.lock ./
+COPY ./web/package.json ./web/yarn.lock ./
 RUN yarn install --production --frozen-lockfile
 RUN cp -R ./node_modules /tmp/node_modules
 RUN yarn install --frozen-lockfile
@@ -14,7 +14,7 @@ ENV NEXT_PUBLIC_UMAMI_URL $NEXT_PUBLIC_UMAMI_URL
 ENV NEXT_PUBLIC_API_PUBLIC $NEXT_PUBLIC_API_PUBLIC
 ENV NEXT_PUBLIC_API_INTERNAL $NEXT_PUBLIC_API_INTERNAL
 
-COPY . ./
+COPY ./web/. ./
 RUN yarn build
 
 FROM node:lts-alpine

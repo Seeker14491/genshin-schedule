@@ -3,11 +3,6 @@ import { createApiClient, User, WebData } from "../../utils/api";
 import { GetServerSideProps } from "next";
 import ConfigProvider from "../../components/ConfigProvider";
 import Layout from "../../components/Layout";
-import Search from "../../components/Customize/Search";
-import { VStack } from "@chakra-ui/react";
-import CharacterList from "../../components/Customize/CharacterList";
-import WeaponList from "../../components/Customize/WeaponList";
-import ArtifactList from "../../components/Customize/ArtifactList";
 import SettingsList from "../../components/Customize/SettingsList";
 import { Language } from "../../langs";
 
@@ -41,14 +36,8 @@ export const getServerSideProps: GetServerSideProps<Props> = async (ctx) => {
 const Customize = ({ language, user, data }: Props) => {
   return (
     <ConfigProvider initial={data} language={language}>
-      <Layout title={["Customize"]}>
-        <VStack align="stretch" spacing={16}>
-          <Search />
-          <CharacterList />
-          <WeaponList />
-          <ArtifactList />
-          <SettingsList user={user || undefined} />
-        </VStack>
+      <Layout title={["Settings"]}>
+        <SettingsList user={user || undefined} />
       </Layout>
     </ConfigProvider>
   );

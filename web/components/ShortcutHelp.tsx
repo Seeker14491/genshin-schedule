@@ -3,12 +3,10 @@ import { Modal, ModalBody, ModalCloseButton, ModalContent, ModalHeader, ModalOve
 import { useHotkeys } from "react-hotkeys-hook";
 import { Heading, HStack, Kbd, ListItem, UnorderedList, VStack } from "@chakra-ui/layout";
 import { Icon } from "@chakra-ui/react";
-import { FormattedMessage, useIntl } from "react-intl";
+import { FormattedMessage } from "react-intl";
 import { Command } from "react-feather";
 
 const ShortcutHelp = ({ open, setOpen }: { open: boolean; setOpen: Dispatch<boolean> }) => {
-  const { formatMessage } = useIntl();
-
   useHotkeys("k", (e) => {
     setOpen(true);
     e.preventDefault();
@@ -65,24 +63,6 @@ const ShortcutHelp = ({ open, setOpen }: { open: boolean; setOpen: Dispatch<bool
                     ),
                   }}
                 />
-              </KeyHint>
-            </Category>
-
-            <Category heading={<FormattedMessage defaultMessage="Task scheduler" />}>
-              <KeyHint shortcut="f">
-                <FormattedMessage defaultMessage="Search tasks" />
-              </KeyHint>
-              <KeyHint shortcut="l">
-                <FormattedMessage defaultMessage="Toggle list overlay" />
-              </KeyHint>
-              <KeyHint shortcut="n">
-                <FormattedMessage defaultMessage="Focus next task" />
-              </KeyHint>
-              <KeyHint shortcut={`${formatMessage({ defaultMessage: "shift" })}+n`}>
-                <FormattedMessage defaultMessage="Focus previous task" />
-              </KeyHint>
-              <KeyHint shortcut="d">
-                <FormattedMessage defaultMessage="Mark as done" />
               </KeyHint>
             </Category>
 

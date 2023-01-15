@@ -5,8 +5,6 @@ import ConfigProvider from "../components/ConfigProvider";
 import { createApiClient } from "../utils/api";
 import Layout from "../components/Layout";
 import ResinCalculator from "../assets/welcome/ResinCalculator.jpg";
-import TaskScheduler from "../assets/welcome/TaskScheduler.jpg";
-import DomainView from "../assets/welcome/DomainView.jpg";
 import UserSignIn from "../components/Auth/UserSignIn";
 import Favicon180x180 from "../public/favicon-180x180.png";
 import { FormattedMessage } from "react-intl";
@@ -54,7 +52,7 @@ const Welcome = ({ language }: Props) => {
                 <FormattedMessage defaultMessage="Genshin Schedule" />
               </Heading>
               <div>
-                <FormattedMessage defaultMessage="Genshin Schedule is a website to help you keep track of time-related game activities in Genshin Impact." />
+                <FormattedMessage defaultMessage="Genshin Schedule is a website to help you keep track of your resin in Genshin Impact." />
               </div>
             </VStack>
 
@@ -96,36 +94,6 @@ const Welcome = ({ language }: Props) => {
 
                 <div>
                   <NextImage src={ResinCalculator} />
-                </div>
-              </VStack>
-
-              <VStack align="stretch" spacing={8}>
-                <VStack align="stretch" spacing={2}>
-                  <Heading size="md">
-                    <FormattedMessage defaultMessage="Task scheduler" />
-                  </Heading>
-                  <div>
-                    <FormattedMessage defaultMessage="Tracks open world resources and reminds you as soon as they respawn. There is no limit to the number of pins." />
-                  </div>
-                </VStack>
-
-                <div>
-                  <NextImage src={TaskScheduler} />
-                </div>
-              </VStack>
-
-              <VStack align="stretch" spacing={8}>
-                <VStack align="stretch" spacing={2}>
-                  <Heading size="md">
-                    <FormattedMessage defaultMessage="Domain view" />
-                  </Heading>
-                  <div>
-                    <FormattedMessage defaultMessage="Shows which domains can be cleared for ascension materials and artifacts for the day." />
-                  </div>
-                </VStack>
-
-                <div>
-                  <NextImage src={DomainView} />
                 </div>
               </VStack>
             </VStack>

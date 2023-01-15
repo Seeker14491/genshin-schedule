@@ -1,6 +1,4 @@
 import React, { memo } from "react";
-import DomainList from "../../components/Home/DomainView";
-import TaskList from "../../components/Home/Tasks";
 import Resin from "../../components/Home/Resin";
 import RealmCurrency from "../../components/Home/RealmCurrency";
 import Clock from "../../components/Home/Clock";
@@ -44,8 +42,6 @@ const Home = ({ language, data }: Props) => {
           <Clock />
           <Resin />
           <RealmCurrency />
-          <TaskList />
-          <DomainList />
         </VStack>
       </Layout>
     </ConfigProvider>

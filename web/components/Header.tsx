@@ -25,9 +25,9 @@ const Header = ({ menu }: { menu?: ReactNode }) => {
       <HStack spacing={4}>
         {menu}
 
-        <NextLink href="/customize" passHref>
+        <NextLink href="/settings" passHref>
           <Link flexShrink={0}>
-            <Tooltip label={<FormattedMessage defaultMessage="Customize" />}>
+            <Tooltip label={<FormattedMessage defaultMessage="Settings" />}>
               <span>
                 <Icon as={Settings} />
               </span>

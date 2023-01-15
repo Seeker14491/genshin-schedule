@@ -70,7 +70,7 @@ const Welcome = ({ language }: Props) => {
               <Button
                 as="a"
                 leftIcon={<Icon as={GitHub} />}
-                href="https://github.com/chiyadev/genshin-schedule"
+                href="https://github.com/Seeker14491/genshin-schedule"
                 target="_blank"
               >
                 <FormattedMessage defaultMessage="GitHub" />

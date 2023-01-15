@@ -47,7 +47,7 @@ export type SyncResponse = {
   token: string;
 };
 
-export const ApiUrlDefault = "https://genshin.chiya.dev/api/v1";
+export const ApiUrlDefault = "https://genshin.seekr.pw/api/v1";
 export const ApiUrlPublic = process.env.NEXT_PUBLIC_API_PUBLIC || ApiUrlDefault;
 export const ApiUrlInternal = process.env.NEXT_PUBLIC_API_INTERNAL || ApiUrlPublic;
 

@@ -26,7 +26,7 @@ const LanguageSwitch = () => {
           value={value}
           onChange={({ currentTarget: { value } }) => {
             if (value === "contribute") {
-              window.open("https://github.com/chiyadev/genshin-schedule/tree/master/web/langs");
+              window.open("https://github.com/Seeker14491/genshin-schedule/tree/master/web/langs");
             } else {
               setValue(value as any);
               trackEvent("background", value);

@@ -1,45 +1,29 @@
-import React, { memo } from "react";
+import { memo } from "react";
 import { chakra, HStack, Icon, Link, Tooltip, VStack, useColorModeValue } from "@chakra-ui/react";
-import NextLink from "next/link";
 import { FormattedMessage } from "react-intl";
-import { Command, GitHub, Heart, HelpCircle, MessageSquare } from "react-feather";
+import { Command, GitHub, HelpCircle } from "react-feather";
 
 const Footer = ({ showShortcuts }: { showShortcuts?: () => void }) => {
   return (
     <VStack as="footer" align="stretch" spacing={4} p={4} color="gray.500" textAlign="center">
       <chakra.div fontSize="sm">
-        <p>
-          <FormattedMessage
-            defaultMessage="{app} is not affiliated with or endorsed by {mihoyo}."
-            values={{
-              app: (
-                <NextLink href="/" passHref>
-                  <Link>
-                    <em>genshin.chiya.dev</em>
-                  </Link>
-                </NextLink>
-              ),
-              mihoyo: (
-                <Link href="https://mihoyo.com/" isExternal>
-                  <em>
-                    <FormattedMessage defaultMessage="miHoYo" />
-                  </em>
-                </Link>
-              ),
-            }}
-          />
-        </p>
-
-        <p>
-          <FormattedMessage defaultMessage="Data on this website may not always be accurate or up-to-date with in-game changes." />
-        </p>
+        <p>Genshin Schedule is not affiliated with or endorsed by HoYoverse.</p>
       </chakra.div>
 
       <chakra.div fontSize="sm">
         <p>
           <FormattedMessage
-            defaultMessage="Written by {chiya} and {contrib} on GitHub."
+            defaultMessage="This site is a fork of the original, now offline, Genshin Schedule. This fork is mainained by {seekr}. The original was written by {chiya} and {contrib}."
             values={{
+              seekr: (
+                <Link
+                  href="https://github.com/Seeker14491"
+                  isExternal
+                  color={useColorModeValue("pink.500", "pink.300")}
+                >
+                  Seekr
+                </Link>
+              ),
               chiya: (
                 <Link href="https://chiya.dev" isExternal color={useColorModeValue("pink.500", "pink.300")}>
                   chiya.dev
@@ -74,21 +58,9 @@ const Footer = ({ showShortcuts }: { showShortcuts?: () => void }) => {
           </Link>
         </Tooltip>
 
-        <Tooltip label={<FormattedMessage defaultMessage="Discord" />}>
-          <Link href="https://discord.gg/XdPQeEaBE7" isExternal>
-            <Icon as={MessageSquare} />
-          </Link>
-        </Tooltip>
-
         <Tooltip label={<FormattedMessage defaultMessage="GitHub" />}>
-          <Link href="https://github.com/chiyadev/genshin-schedule" isExternal>
+          <Link href="https://github.com/Seeker14491/genshin-schedule" isExternal>
             <Icon as={GitHub} />
-          </Link>
-        </Tooltip>
-
-        <Tooltip label="chiya.dev">
-          <Link href="https://chiya.dev" isExternal>
-            <Icon as={Heart} />
           </Link>
         </Tooltip>
       </HStack>

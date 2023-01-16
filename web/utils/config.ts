@@ -130,7 +130,7 @@ export const DefaultConfig: Config = {
     value: 0,
     time: Date.now(),
   },
-  resinCalcButtons: [-60, -40, -30, -20],
+  resinCalcButtons: [-40, -30, -20, -10, 10],
   characters: [],
   charactersWeekly: [],
   charactersGem: [],

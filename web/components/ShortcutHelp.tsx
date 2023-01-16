@@ -2,7 +2,7 @@ import React, { Dispatch, memo, ReactNode } from "react";
 import { Modal, ModalBody, ModalCloseButton, ModalContent, ModalHeader, ModalOverlay } from "@chakra-ui/modal";
 import { useHotkeys } from "react-hotkeys-hook";
 import { Heading, HStack, Kbd, ListItem, UnorderedList, VStack } from "@chakra-ui/layout";
-import { Icon } from "@chakra-ui/react";
+import { Box, Icon } from "@chakra-ui/react";
 import { FormattedMessage } from "react-intl";
 import { Command } from "react-feather";
 
@@ -40,13 +40,18 @@ const ShortcutHelp = ({ open, setOpen }: { open: boolean; setOpen: Dispatch<bool
             </Category>
 
             <Category heading={<FormattedMessage defaultMessage="Resin calculator" />}>
+              <p>
+                Note: These shortcuts require a corresponding resin button to be available. Resin buttons can be
+                configured in settings.
+              </p>
+              <Box padding={1} />
               <KeyHint>
                 <FormattedMessage
                   defaultMessage="Subtract {values}"
                   values={{
                     values: (
                       <>
-                        20 <Kbd>2</Kbd>, 30 <Kbd>3</Kbd>, 40 <Kbd>4</Kbd>, 60 <Kbd>6</Kbd>
+                        20 <Kbd>2</Kbd>, etc.
                       </>
                     ),
                   }}
@@ -58,7 +63,7 @@ const ShortcutHelp = ({ open, setOpen }: { open: boolean; setOpen: Dispatch<bool
                   values={{
                     values: (
                       <>
-                        20 <Kbd>shift+2</Kbd>, 30 <Kbd>shift+3</Kbd>, 40 <Kbd>shift+4</Kbd>, 60 <Kbd>shift+6</Kbd>
+                        20 <Kbd>shift+2</Kbd>, etc.
                       </>
                     ),
                   }}

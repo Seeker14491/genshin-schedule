@@ -27,18 +27,6 @@ const ShortcutHelp = ({ open, setOpen }: { open: boolean; setOpen: Dispatch<bool
         <ModalCloseButton />
         <ModalBody>
           <VStack align="start" spacing={4}>
-            <Category heading={<FormattedMessage defaultMessage="Server clock" />}>
-              <KeyHint shortcut={<FormattedMessage defaultMessage="left" />}>
-                <FormattedMessage defaultMessage="Previous day" />
-              </KeyHint>
-              <KeyHint shortcut={<FormattedMessage defaultMessage="right" />}>
-                <FormattedMessage defaultMessage="Next day" />
-              </KeyHint>
-              <KeyHint shortcut={<FormattedMessage defaultMessage="esc" />}>
-                <FormattedMessage defaultMessage="Reset offset" />
-              </KeyHint>
-            </Category>
-
             <Category heading={<FormattedMessage defaultMessage="Resin calculator" />}>
               <p>
                 Note: These shortcuts require a corresponding resin button to be available. Resin buttons can be

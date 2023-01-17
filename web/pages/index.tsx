@@ -52,7 +52,10 @@ const Welcome = ({ language }: Props) => {
                 <FormattedMessage defaultMessage="Genshin Schedule" />
               </Heading>
               <div>
-                <FormattedMessage defaultMessage="Genshin Schedule is a website to help you keep track of your resin in Genshin Impact." />
+                <FormattedMessage defaultMessage="A simple app for keeping track of your resin in Genshin Impact." />
+              </div>
+              <div>
+                <FormattedMessage defaultMessage="Mobile-friendly, dark mode, supports syncing across devices, and can ping you on Discord if your resin reaches a configurable level." />
               </div>
             </VStack>
 

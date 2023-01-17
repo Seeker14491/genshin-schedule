@@ -36,7 +36,6 @@ const Layout = ({
       </Head>
 
       <KeyHelp open={shortcuts} setOpen={setShortcuts} />
-      <ClockOffsetWarning />
       <ChangelogModal />
       <StatisticsUpdater />
 

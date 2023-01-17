@@ -51,26 +51,6 @@ msgctxt "components.ChangelogModal.3a15e6"
 msgid "Update changelog"
 msgstr ""
 
-#: components/ClockOffsetWarning.tsx:24
-msgctxt "components.ClockOffsetWarning.85fdee"
-msgid "Showing schedule {offset, plural, =1 {for tomorrow} =-1 {for yesterday} other {in # days}}."
-msgstr ""
-
-#: components/ClockOffsetWarning.tsx:36
-msgctxt "components.ClockOffsetWarning.8e6fec"
-msgid "Reset"
-msgstr ""
-
-#: components/Customize/LeakedWarning.tsx:10
-msgctxt "components.Customize.LeakedWarning.8c8c3a"
-msgid "This page may be inaccurate."
-msgstr ""
-
-#: components/Customize/LeakedWarning.tsx:13
-msgctxt "components.Customize.LeakedWarning.ddaaad"
-msgid "The following information is based on leaked data from beta versions of the game. Take it with a grain of salt."
-msgstr ""
-
 #: components/Customize/Notifications/Info.tsx:104
 msgctxt "components.Customize.Notifications.Info.049a4d"
 msgid "Invite the bot"
@@ -271,22 +251,12 @@ msgctxt "components.Customize.SettingsList.SignOutButton.c576c9"
 msgid "Sign out"
 msgstr ""
 
-#: components/Customize/SettingsList/TaskDefaultZoomSlider.tsx:28
-msgctxt "components.Customize.SettingsList.TaskDefaultZoomSlider.9c6d23"
-msgid "Zoom on task focus"
-msgstr ""
-
-#: components/Customize/SettingsList/TaskListCompactSwitch.tsx:17
-msgctxt "components.Customize.SettingsList.TaskListCompactSwitch.a852ad"
-msgid "Compact task list"
-msgstr ""
-
 #: components/Customize/SettingsList/ThemeSwitch.tsx:17
 msgctxt "components.Customize.SettingsList.ThemeSwitch.84c510"
 msgid "Dark mode"
 msgstr ""
 
-#: components/Customize/SettingsList/index.tsx:21
+#: components/Customize/SettingsList/index.tsx:19
 msgctxt "components.Customize.SettingsList.index.0f789d"
 msgid "Settings"
 msgstr ""
@@ -337,8 +307,8 @@ msgid "contributors"
 msgstr ""
 
 #: components/Header.tsx:30
-msgctxt "components.Header.4d7a4e"
-msgid "Customize"
+msgctxt "components.Header.0f789d"
+msgid "Settings"
 msgstr ""
 
 #: components/Header.tsx:17
@@ -379,16 +349,6 @@ msgstr ""
 #: components/Home/Clock/ServerText.tsx:16
 msgctxt "components.Home.Clock.ServerText.9d0209"
 msgid "America"
-msgstr ""
-
-#: components/Home/Clock/TimeDisplay.tsx:62
-msgctxt "components.Home.Clock.TimeDisplay.44c3b9"
-msgid "Previous day"
-msgstr ""
-
-#: components/Home/Clock/TimeDisplay.tsx:72
-msgctxt "components.Home.Clock.TimeDisplay.dd708b"
-msgid "Next day"
 msgstr ""
 
 #: components/Home/Clock/index.tsx:16
@@ -501,227 +461,47 @@ msgctxt "components.Home.Resin.index.fe85b2"
 msgid "Resin Calculator"
 msgstr ""
 
-#: components/Layout.tsx:63
+#: components/Layout.tsx:62
 msgctxt "components.Layout.1f7783"
 msgid "Statistics"
 msgstr ""
 
-#: components/Layout.tsx:53
+#: components/Layout.tsx:52
 msgctxt "components.Layout.34089d"
 msgid "Notifications"
 msgstr ""
 
-#: components/Layout.tsx:71
+#: components/Layout.tsx:70
 msgctxt "components.Layout.484351"
 msgid "Help"
 msgstr ""
 
-#: components/Map/TaskCreateLayer/CreateButton.tsx:32
-msgctxt "components.Map.TaskCreateLayer.CreateButton.573cd8"
-msgid "Create"
-msgstr ""
-
-#: components/Map/TaskLayer/DeleteButton.tsx:31
-msgctxt "components.Map.TaskLayer.DeleteButton.2b7afa"
-msgid "Delete"
-msgstr ""
-
-#: components/Map/TaskLayer/DoneButton.tsx:31
-msgctxt "components.Map.TaskLayer.DoneButton.395490"
-msgid "Mark as to-do"
-msgstr ""
-
-#: components/Map/TaskLayer/DoneButton.tsx:33
-msgctxt "components.Map.TaskLayer.DoneButton.927523"
-msgid "Mark as done"
-msgstr ""
-
-#: components/Map/TaskMarker/BackButton.tsx:12
-msgctxt "components.Map.TaskMarker.BackButton.73247b"
-msgid "Back"
-msgstr ""
-
-#: components/Map/TaskMarker/InfoPage/DueText.tsx:25
-msgctxt "components.Map.TaskMarker.InfoPage.DueText.17572f"
-msgid "Due {time} ago"
-msgstr ""
-
-#: components/Map/TaskMarker/InfoPage/DueText.tsx:20
-msgctxt "components.Map.TaskMarker.InfoPage.DueText.767ec9"
-msgid "Due in {time}"
-msgstr ""
-
-#: components/Map/TaskMarker/InfoPage/HideCheck.tsx:17
-msgctxt "components.Map.TaskMarker.InfoPage.HideCheck.fdf592"
-msgid "Hide temporarily"
-msgstr ""
-
-#: components/Map/TaskMarker/InfoPage/IntervalPicker.tsx:83
-msgctxt "components.Map.TaskMarker.InfoPage.IntervalPicker.52cf48"
-msgid "{time}AM"
-msgstr ""
-
-#: components/Map/TaskMarker/InfoPage/IntervalPicker.tsx:82
-msgctxt "components.Map.TaskMarker.InfoPage.IntervalPicker.6e6cc8"
-msgid "Server reset"
-msgstr ""
-
-#: components/Map/TaskMarker/InfoPage/IntervalPicker.tsx:20
-msgctxt "components.Map.TaskMarker.InfoPage.IntervalPicker.a736a6"
-msgid "Respawns every"
-msgstr ""
-
-#: components/Map/TaskMarker/InfoPage/IntervalResetCheck.tsx:17
-msgctxt "components.Map.TaskMarker.InfoPage.IntervalResetCheck.4b91b9"
-msgid "Respawns on server reset"
-msgstr ""
-
-#: components/Map/TaskMarker/InfoPage/IntervalResetCheck.tsx:29
-msgctxt "components.Map.TaskMarker.InfoPage.IntervalResetCheck.52cf48"
-msgid "{time}AM"
-msgstr ""
-
-#: components/Map/TaskMarker/InfoPage/IntervalResetCheck.tsx:27
-msgctxt "components.Map.TaskMarker.InfoPage.IntervalResetCheck.fdce60"
-msgid "Respawn on every"
-msgstr ""
-
-#: components/Map/TaskMarker/InfoPage/NotifyToggle.tsx:30
-msgctxt "components.Map.TaskMarker.InfoPage.NotifyToggle.0b66a8"
-msgid "{name} respawned"
-msgstr ""
-
-#: components/Map/TaskMarker/InfoPage/NotifyToggle.tsx:46
-msgctxt "components.Map.TaskMarker.InfoPage.NotifyToggle.da9e7e"
-msgid "Notify respawn"
-msgstr ""
-
-#: components/Map/TaskMarker/InfoPage/index.tsx:94
-msgctxt "components.Map.TaskMarker.InfoPage.index.343579"
-msgid "Options"
-msgstr ""
-
-#: components/Map/TaskMarker/InfoPage/index.tsx:46
-msgctxt "components.Map.TaskMarker.InfoPage.index.656cac"
-msgid "Change icon"
-msgstr ""
-
-#: components/Map/TaskMarker/InfoPage/index.tsx:82
-msgctxt "components.Map.TaskMarker.InfoPage.index.906238"
-msgid "Task description"
-msgstr ""
-
-#: components/MapPage/SearchButton.tsx:26
-msgctxt "components.MapPage.SearchButton.c66715"
-msgid "Search"
-msgstr ""
-
-#: components/MapPage/TaskListOverlay.tsx:54
-msgctxt "components.MapPage.TaskListOverlay.ea3f7e"
-msgid "Show list"
-msgstr ""
-
-#: components/MapPage/TaskListOverlay.tsx:52
-msgctxt "components.MapPage.TaskListOverlay.f36c72"
-msgid "Hide list"
-msgstr ""
-
-#: components/ShortcutHelp.tsx:79
-msgctxt "components.ShortcutHelp.0b8e0c"
-msgid "Focus next task"
-msgstr ""
-
-#: components/ShortcutHelp.tsx:58
+#: components/ShortcutHelp.tsx:49
 msgctxt "components.ShortcutHelp.0eca1d"
 msgid "Add {values}"
 msgstr ""
 
-#: components/ShortcutHelp.tsx:34
-msgctxt "components.ShortcutHelp.44c3b9"
-msgid "Previous day"
-msgstr ""
-
-#: components/ShortcutHelp.tsx:81
-msgctxt "components.ShortcutHelp.49f4fc"
-msgid "shift"
-msgstr ""
-
-#: components/ShortcutHelp.tsx:33
-msgctxt "components.ShortcutHelp.5451c7"
-msgid "left"
-msgstr ""
-
-#: components/ShortcutHelp.tsx:36
-msgctxt "components.ShortcutHelp.55c972"
-msgid "right"
-msgstr ""
-
-#: components/ShortcutHelp.tsx:32
-msgctxt "components.ShortcutHelp.723949"
-msgid "Server clock"
-msgstr ""
-
-#: components/ShortcutHelp.tsx:71
-msgctxt "components.ShortcutHelp.755c57"
-msgid "Task scheduler"
-msgstr ""
-
-#: components/ShortcutHelp.tsx:73
-msgctxt "components.ShortcutHelp.7acb8d"
-msgid "Search tasks"
-msgstr ""
-
-#: components/ShortcutHelp.tsx:85
-msgctxt "components.ShortcutHelp.927523"
-msgid "Mark as done"
-msgstr ""
-
-#: components/ShortcutHelp.tsx:44
+#: components/ShortcutHelp.tsx:30
 msgctxt "components.ShortcutHelp.96d48b"
 msgid "Resin calculator"
 msgstr ""
 
-#: components/ShortcutHelp.tsx:91
+#: components/ShortcutHelp.tsx:64
 msgctxt "components.ShortcutHelp.9f8054"
 msgid "Show keyboard shortcuts"
 msgstr ""
 
-#: components/ShortcutHelp.tsx:46
+#: components/ShortcutHelp.tsx:37
 msgctxt "components.ShortcutHelp.b13795"
 msgid "Subtract {values}"
 msgstr ""
 
-#: components/ShortcutHelp.tsx:25
+#: components/ShortcutHelp.tsx:23
 msgctxt "components.ShortcutHelp.bf360f"
 msgid "Keyboard shortcuts"
 msgstr ""
 
-#: components/ShortcutHelp.tsx:76
-msgctxt "components.ShortcutHelp.c03f14"
-msgid "Toggle list overlay"
-msgstr ""
-
-#: components/ShortcutHelp.tsx:39
-msgctxt "components.ShortcutHelp.c886e7"
-msgid "esc"
-msgstr ""
-
-#: components/ShortcutHelp.tsx:37
-msgctxt "components.ShortcutHelp.dd708b"
-msgid "Next day"
-msgstr ""
-
-#: components/ShortcutHelp.tsx:82
-msgctxt "components.ShortcutHelp.efcb6e"
-msgid "Focus previous task"
-msgstr ""
-
-#: components/ShortcutHelp.tsx:40
-msgctxt "components.ShortcutHelp.fcc2fc"
-msgid "Reset offset"
-msgstr ""
-
-#: components/ShortcutHelp.tsx:89
+#: components/ShortcutHelp.tsx:62
 msgctxt "components.ShortcutHelp.fd59c3"
 msgid "Other"
 msgstr ""
@@ -784,71 +564,6 @@ msgstr ""
 #: components/Statistics/ResinStats.tsx:74
 msgctxt "components.Statistics.ResinStats.cd681b"
 msgid "Today"
-msgstr ""
-
-#: components/Statistics/TaskStats.tsx:90
-msgctxt "components.Statistics.TaskStats.309da3"
-msgid "Total"
-msgstr ""
-
-#: components/Statistics/TaskStats.tsx:109
-msgctxt "components.Statistics.TaskStats.6b30d3"
-msgid "Peak"
-msgstr ""
-
-#: components/Statistics/TaskStats.tsx:117
-msgctxt "components.Statistics.TaskStats.76ed65"
-msgid "Never"
-msgstr ""
-
-#: components/Statistics/TaskStats.tsx:25
-msgctxt "components.Statistics.TaskStats.c90f7d"
-msgid "Tasks done"
-msgstr ""
-
-#: components/Statistics/TaskStats.tsx:72
-msgctxt "components.Statistics.TaskStats.cd681b"
-msgid "Today"
-msgstr ""
-
-#: components/TaskListCard/DoneButton.tsx:42
-msgctxt "components.TaskListCard.DoneButton.395490"
-msgid "Mark as to-do"
-msgstr ""
-
-#: components/TaskListCard/DoneButton.tsx:42
-msgctxt "components.TaskListCard.DoneButton.927523"
-msgid "Mark as done"
-msgstr ""
-
-#: components/TaskListCard/HideButton.tsx:41
-msgctxt "components.TaskListCard.HideButton.2bb024"
-msgid "Show"
-msgstr ""
-
-#: components/TaskListCard/HideButton.tsx:28
-msgctxt "components.TaskListCard.HideButton.3106fe"
-msgid "Unhide"
-msgstr ""
-
-#: components/TaskListCard/HideButton.tsx:41
-msgctxt "components.TaskListCard.HideButton.540fd9"
-msgid "Hide"
-msgstr ""
-
-#: components/TaskListCard/HideButton.tsx:26
-msgctxt "components.TaskListCard.HideButton.fdf592"
-msgid "Hide temporarily"
-msgstr ""
-
-#: components/TaskListCard/Item.tsx:51
-msgctxt "components.TaskListCard.Item.0ababe"
-msgid "Highlight task"
-msgstr ""
-
-#: components/TaskSearchModal.tsx:34
-msgctxt "components.TaskSearchModal.4ae60b"
-msgid "Search tasks…"
 msgstr ""
 
 #: db/artifacts.ts:27

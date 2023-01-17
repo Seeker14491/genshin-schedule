@@ -2,7 +2,15 @@
 
 # Genshin Schedule
 
-Genshin Schedule is a website to help you keep track of your resin in Genshin Impact.
+A simple app for keeping track of your resin in Genshin Impact.
+
+## Features
+
+- Sync data across devices
+- Resin notifications through Discord
+- Mobile friendly
+- Keyboard shortcuts
+- Dark mode
 
 ![home](images/home.png)
 

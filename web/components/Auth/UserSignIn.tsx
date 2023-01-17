@@ -84,26 +84,10 @@ const UserSignIn = () => {
       </VStack>
 
       <chakra.div fontSize="sm">
-        <Link
-          fontSize="sm"
-          color={useColorModeValue("blue.500", "blue.300")}
-          href="https://github.com/chiyadev/genshin-schedule/wiki/Recovering-a-lost-account"
-          isExternal
-        >
-          <FormattedMessage defaultMessage="Forgot password?" />
-        </Link>
-
         <p>
           <chakra.span color="gray.500">
-            <FormattedMessage defaultMessage="Never reuse your miHoYo password on Genshin-related websites." />
+            <FormattedMessage defaultMessage="Never reuse your HoYoverse password on Genshin-related websites." />
           </chakra.span>{" "}
-          <Link
-            color={useColorModeValue("blue.500", "blue.300")}
-            href="https://github.com/chiyadev/genshin-schedule/wiki/Regarding-miHoYo-account-security"
-            isExternal
-          >
-            <FormattedMessage defaultMessage="Read more." />
-          </Link>
         </p>
       </chakra.div>
 

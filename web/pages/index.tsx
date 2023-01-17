@@ -44,7 +44,7 @@ const Welcome = ({ language }: Props) => {
         <VStack align="stretch" spacing={32} py={32} flex={1} maxW="568px" mx="auto">
           <VStack align="stretch" spacing={8}>
             <div>
-              <chakra.img w={20} src={Favicon180x180.src} borderRadius="md" />
+              <chakra.img w={20} src={"android-chrome-256x256.png"} borderRadius="md" />
             </div>
 
             <VStack align="stretch" spacing={4}>

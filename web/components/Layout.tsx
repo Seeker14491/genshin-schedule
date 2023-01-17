@@ -9,7 +9,6 @@ import ChangelogModal from "./ChangelogModal";
 import NextLink from "next/link";
 import StatisticsUpdater from "./Statistics/StatisticsUpdater";
 import ColorModeOverride from "./ColorModeOverride";
-import ClockOffsetWarning from "./ClockOffsetWarning";
 import { Tooltip } from "@chakra-ui/tooltip";
 import { FormattedMessage } from "react-intl";
 import { Bell, HelpCircle, PieChart } from "react-feather";

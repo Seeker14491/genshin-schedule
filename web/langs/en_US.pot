@@ -1,42 +1,37 @@
 msgid ""
 msgstr ""
 
-#: components/Auth/UserSignIn.tsx:62
+#: components/Auth/UserSignIn.tsx:60
 msgctxt "components.Auth.UserSignIn.242220"
 msgid "Username"
 msgstr ""
 
-#: components/Auth/UserSignIn.tsx:46
+#: components/Auth/UserSignIn.tsx:44
 msgctxt "components.Auth.UserSignIn.28def3"
 msgid "Error"
 msgstr ""
 
-#: components/Auth/UserSignIn.tsx:89
+#: components/Auth/UserSignIn.tsx:87
 msgctxt "components.Auth.UserSignIn.2df83f"
 msgid "Never reuse your HoYoverse password on Genshin-related websites."
 msgstr ""
 
-#: components/Auth/UserSignIn.tsx:148
+#: components/Auth/UserSignIn.tsx:139
 msgctxt "components.Auth.UserSignIn.67b73d"
 msgid "Continue without signing in"
 msgstr ""
 
-#: components/Auth/UserSignIn.tsx:135
+#: components/Auth/UserSignIn.tsx:126
 msgctxt "components.Auth.UserSignIn.93eb72"
 msgid "All data will be stored locally on the browser."
 msgstr ""
 
-#: components/Auth/UserSignIn.tsx:96
-msgctxt "components.Auth.UserSignIn.bc7fa7"
-msgid "Read more."
-msgstr ""
-
-#: components/Auth/UserSignIn.tsx:129
+#: components/Auth/UserSignIn.tsx:120
 msgctxt "components.Auth.UserSignIn.c12651"
 msgid "Submit"
 msgstr ""
 
-#: components/Auth/UserSignIn.tsx:78
+#: components/Auth/UserSignIn.tsx:76
 msgctxt "components.Auth.UserSignIn.e6c83b"
 msgid "Password"
 msgstr ""
@@ -256,26 +251,6 @@ msgctxt "components.Customize.SettingsList.index.0f789d"
 msgid "Settings"
 msgstr ""
 
-#: components/DropLabel.tsx:72
-msgctxt "components.DropLabel.0388b5"
-msgid "{category}, {region}"
-msgstr ""
-
-#: components/DropLabel.tsx:66
-msgctxt "components.DropLabel.30b06c"
-msgid "Auxiliary drop based on probability"
-msgstr ""
-
-#: components/DropLabel.tsx:88
-msgctxt "components.DropLabel.9f8862"
-msgid "{domain}{days, select, undefined {} other { on {days}}}"
-msgstr ""
-
-#: components/DropLabel.tsx:41
-msgctxt "components.DropLabel.abb354"
-msgid "This item does not currently drop from any domains."
-msgstr ""
-
 #: components/Footer.tsx:55
 msgctxt "components.Footer.484351"
 msgid "Help"
@@ -456,17 +431,17 @@ msgctxt "components.Home.Resin.index.fe85b2"
 msgid "Resin Calculator"
 msgstr ""
 
-#: components/Layout.tsx:62
+#: components/Layout.tsx:61
 msgctxt "components.Layout.1f7783"
 msgid "Statistics"
 msgstr ""
 
-#: components/Layout.tsx:52
+#: components/Layout.tsx:51
 msgctxt "components.Layout.34089d"
 msgid "Notifications"
 msgstr ""
 
-#: components/Layout.tsx:70
+#: components/Layout.tsx:69
 msgctxt "components.Layout.484351"
 msgid "Help"
 msgstr ""

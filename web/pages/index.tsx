@@ -91,7 +91,7 @@ const Welcome = ({ language }: Props) => {
                     <FormattedMessage defaultMessage="Resin calculator" />
                   </Heading>
                   <div>
-                    <FormattedMessage defaultMessage="Tracks your resins and estimates when it will recharge without having to open the game." />
+                    <FormattedMessage defaultMessage="Tracks your resin and estimates when it will recharge without having to open the game." />
                   </div>
                 </VStack>
 

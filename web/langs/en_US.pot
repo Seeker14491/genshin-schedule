@@ -561,11 +561,6 @@ msgctxt "pages.home.notifications.queue.fcf2e1"
 msgid "There are no notifications in queue."
 msgstr ""
 
-#: pages/index.tsx:94
-msgctxt "pages.index.0ed193"
-msgid "Tracks your resins and estimates when it will recharge without having to open the game."
-msgstr ""
-
 #: pages/index.tsx:111
 msgctxt "pages.index.37b47a"
 msgid "Signing in will enable synchronization across multiple devices. If you do not already have an account, it will be created automatically."
@@ -574,6 +569,11 @@ msgstr ""
 #: pages/index.tsx:108
 msgctxt "pages.index.49026d"
 msgid "Sign in"
+msgstr ""
+
+#: pages/index.tsx:94
+msgctxt "pages.index.4c4a8d"
+msgid "Tracks your resin and estimates when it will recharge without having to open the game."
 msgstr ""
 
 #: pages/index.tsx:58

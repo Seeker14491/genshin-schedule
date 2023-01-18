@@ -18,4 +18,4 @@ Game images are usually downloaded from the [Genshin Impact Wiki](https://genshi
 
 ## Copyright notice
 
-The [Genshin font](fonts/Genshin.woff) and all files in the [game data](game) directory are copyrighted assets of [miHoYo](https://mihoyo.com/). All other files are licensed under the [repository license](../../LICENSE) as usual unless otherwise noted.
+The [Genshin font](fonts/Genshin.woff2) and all files in the [game data](game) directory are copyrighted assets of [miHoYo](https://mihoyo.com/). All other files are licensed under the [repository license](../../LICENSE) as usual unless otherwise noted.

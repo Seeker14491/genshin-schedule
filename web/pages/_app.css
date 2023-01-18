@@ -1,6 +1,6 @@
 @font-face {
   font-family: "Genshin";
-  src: URL("../assets/fonts/Genshin.woff") format("truetype");
+  src: URL("../assets/fonts/Genshin.woff2") format("truetype");
 }
 
 /* https://github.com/Leaflet/Leaflet/issues/3575#issuecomment-688644225 */

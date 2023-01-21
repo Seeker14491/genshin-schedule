@@ -13,10 +13,10 @@ import {
 } from "@chakra-ui/react";
 import React, { memo } from "react";
 import WhiteCard from "../../WhiteCard";
-import Bot from "../../../assets/notifications/Bot.jpg";
-import Privacy from "../../../assets/notifications/Privacy.jpg";
-import PrivacyDM from "../../../assets/notifications/PrivacyDM.jpg";
-import Success from "../../../assets/notifications/Success.jpg";
+import Bot from "../../../assets/notifications/Bot.png";
+import Privacy from "../../../assets/notifications/Privacy.png";
+import PrivacyDM from "../../../assets/notifications/PrivacyDM.png";
+import Success from "../../../assets/notifications/Success.png";
 import MessageDisplay from "./MessageDisplay";
 import NextLink from "next/link";
 import { FormattedMessage } from "react-intl";
@@ -50,7 +50,16 @@ const Info = () => {
 
         <VStack align="start" spacing={4}>
           <div>
-            <FormattedMessage defaultMessage="Genshin Schedule has a Discord bot that can send you notifications when your resin recharges or resources respawn." />
+            <FormattedMessage
+              defaultMessage="Genshin Schedule has a Discord bot that can send you notifications when your resin reaches a certain level (configurable in {settings})."
+              values={{
+                settings: (
+                  <Link href="/settings" color={useColorModeValue("blue.500", "blue.300")}>
+                    <FormattedMessage defaultMessage="Settings" />
+                  </Link>
+                ),
+              }}
+            />
           </div>
 
           <chakra.img src={Bot.src} borderRadius="md" />
@@ -59,7 +68,7 @@ const Info = () => {
             <div>
               <FormattedMessage
                 defaultMessage={
-                  "1. Join the {server}, or {invite} to your server. Either method is fine because you can only interact with the bot via DM anyway, but at least one common server is required for the bot to be able to message you."
+                  "1. Join the {server}, or {invite} to your server. Either way, the bot and you need to share a common server in order for the bot to be able to message you."
                 }
                 values={{
                   server: (
@@ -118,13 +127,19 @@ const Info = () => {
 
           <VStack align="start" spacing={2}>
             <div>
-              <FormattedMessage defaultMessage="3. Copy the following message and send it to the bot via DM. Don't share this message with anyone else, ever!" />
+              <FormattedMessage defaultMessage="3. Copy the following message (you must be signed in) and send it to the bot via DM. Don't share this message with anyone else, ever!" />
             </div>
 
             <MessageDisplay />
           </VStack>
 
-          <chakra.img src={Success.src} borderRadius="md" />
+          <VStack align="start" spacing={2}>
+            <div>
+              <FormattedMessage defaultMessage="The bot should inform you that the process succeeded:" />
+            </div>
+
+            <chakra.img src={Success.src} borderRadius="md" />
+          </VStack>
         </VStack>
       </WhiteCard>
     </VStack>

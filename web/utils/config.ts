@@ -117,7 +117,7 @@ export const DefaultConfig: Config = {
   background: "paimon",
   lastChangelog: 0,
   offsetDays: 0,
-  hiddenWidgets: {},
+  hiddenWidgets: { realm: true },
   resin: {
     value: 0,
     time: Date.now(),

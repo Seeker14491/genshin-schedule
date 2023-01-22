@@ -561,12 +561,12 @@ msgctxt "pages.home.notifications.queue.fcf2e1"
 msgid "There are no notifications in queue."
 msgstr ""
 
-#: pages/index.tsx:111
+#: pages/index.tsx:113
 msgctxt "pages.index.37b47a"
 msgid "Signing in will enable synchronization across multiple devices. If you do not already have an account, it will be created automatically."
 msgstr ""
 
-#: pages/index.tsx:108
+#: pages/index.tsx:110
 msgctxt "pages.index.49026d"
 msgid "Sign in"
 msgstr ""

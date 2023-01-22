@@ -1,10 +1,10 @@
 import React, { memo, useRef } from "react";
 import { GetServerSideProps } from "next";
-import { Button, ButtonGroup, chakra, Heading, Icon, VStack } from "@chakra-ui/react";
+import { Box, Button, ButtonGroup, chakra, Heading, Icon, VStack } from "@chakra-ui/react";
 import ConfigProvider from "../components/ConfigProvider";
 import { createApiClient } from "../utils/api";
 import Layout from "../components/Layout";
-import ResinCalculator from "../assets/welcome/ResinCalculator.jpg";
+import ResinCalculator from "../assets/welcome/ResinCalculator.webp";
 import UserSignIn from "../components/Auth/UserSignIn";
 import Favicon256x256 from "../public/android-chrome-256x256.png";
 import { FormattedMessage } from "react-intl";
@@ -95,9 +95,11 @@ const Welcome = ({ language }: Props) => {
                   </div>
                 </VStack>
 
-                <div>
-                  <NextImage src={ResinCalculator} />
-                </div>
+                <Box width="max-content" height="auto">
+                  <Box width="50%" height="auto">
+                    <NextImage src={ResinCalculator} />
+                  </Box>
+                </Box>
               </VStack>
             </VStack>
           </VStack>

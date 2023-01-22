@@ -6,7 +6,6 @@
     "build": "next build",
     "start": "next start",
     "type-check": "tsc",
-    "genassets": "node genassets",
     "genlangs": "node langs/extract.js && node langs/generate.js"
   },
   "dependencies": {

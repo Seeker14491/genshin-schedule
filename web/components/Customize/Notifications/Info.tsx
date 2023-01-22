@@ -1,4 +1,5 @@
 import {
+  Box,
   Button,
   chakra,
   HStack,
@@ -11,12 +12,12 @@ import {
   Wrap,
   WrapItem,
 } from "@chakra-ui/react";
-import React, { memo } from "react";
+import React, { memo, ReactNode } from "react";
 import WhiteCard from "../../WhiteCard";
-import Bot from "../../../assets/notifications/Bot.png";
-import Privacy from "../../../assets/notifications/Privacy.png";
-import PrivacyDM from "../../../assets/notifications/PrivacyDM.png";
-import Success from "../../../assets/notifications/Success.png";
+import Bot from "../../../assets/notifications/Bot.webp";
+import Privacy from "../../../assets/notifications/Privacy.webp";
+import PrivacyDM from "../../../assets/notifications/PrivacyDM.webp";
+import Success from "../../../assets/notifications/Success.webp";
 import MessageDisplay from "./MessageDisplay";
 import NextLink from "next/link";
 import { FormattedMessage } from "react-intl";
@@ -25,6 +26,14 @@ import { Bell, List, MessageSquare, Link as LinkIcon } from "react-feather";
 export const DiscordServerInvite = "https://discord.gg/XdPQeEaBE7";
 export const DiscordBotInvite =
   "https://discord.com/oauth2/authorize?client_id=786827003164098610&scope=bot&permissions=379968";
+
+const ImageWrapper = ({ children }: { children: ReactNode }) => (
+  <Box width="max-content" height="max-content">
+    <Box width="40%" height="auto">
+      {children}
+    </Box>
+  </Box>
+);
 
 const Info = () => {
   return (
@@ -62,7 +71,9 @@ const Info = () => {
             />
           </div>
 
-          <chakra.img src={Bot.src} borderRadius="md" />
+          <ImageWrapper>
+            <chakra.img src={Bot.src} borderRadius="md" />
+          </ImageWrapper>
 
           <VStack align="start" spacing={2}>
             <div>
@@ -121,8 +132,12 @@ const Info = () => {
               <FormattedMessage defaultMessage="2. Make sure DMs from server members are enabled, otherwise the bot cannot message you." />
             </div>
 
-            <chakra.img src={Privacy.src} borderRadius="md" />
-            <chakra.img src={PrivacyDM.src} borderRadius="md" />
+            <ImageWrapper>
+              <chakra.img src={Privacy.src} borderRadius="md" />
+            </ImageWrapper>
+            <ImageWrapper>
+              <chakra.img src={PrivacyDM.src} borderRadius="md" />
+            </ImageWrapper>
           </VStack>
 
           <VStack align="start" spacing={2}>
@@ -138,7 +153,9 @@ const Info = () => {
               <FormattedMessage defaultMessage="The bot should inform you that the process succeeded:" />
             </div>
 
-            <chakra.img src={Success.src} borderRadius="md" />
+            <ImageWrapper>
+              <chakra.img src={Success.src} borderRadius="md" />
+            </ImageWrapper>
           </VStack>
         </VStack>
       </WhiteCard>

@@ -10,6 +10,7 @@ import "leaflet/dist/leaflet.css";
 import "focus-visible/dist/focus-visible";
 import { loadPolyfills } from "../utils/polyfills";
 import { trackView } from "../utils/umami";
+import Script from "next/script";
 
 loadPolyfills();
 
@@ -65,6 +66,7 @@ function App({ Component, pageProps, router }: AppProps) {
         <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5" />
         <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
       </Head>
+      <Script data-website-id="c976809c-8201-40e1-bed0-238345a7635f" src="https://bing.seekr.pw/chilling.js" />
 
       <NProgress />
       <Component {...pageProps} />

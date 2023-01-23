@@ -4,9 +4,9 @@ import { Box, Button, ButtonGroup, chakra, Heading, Icon, VStack } from "@chakra
 import ConfigProvider from "../components/ConfigProvider";
 import { createApiClient } from "../utils/api";
 import Layout from "../components/Layout";
+import PaimonIcon from "../assets/welcome/PaimonIcon.webp";
 import ResinCalculator from "../assets/welcome/ResinCalculator.webp";
 import UserSignIn from "../components/Auth/UserSignIn";
-import Favicon256x256 from "../public/android-chrome-256x256.png";
 import { FormattedMessage } from "react-intl";
 import NextImage from "next/image";
 import { GitHub, LogIn } from "react-feather";
@@ -43,9 +43,7 @@ const Welcome = ({ language }: Props) => {
       <Layout header={false}>
         <VStack align="stretch" spacing={32} py={32} flex={1} maxW="568px" mx="auto">
           <VStack align="stretch" spacing={8}>
-            <div>
-              <chakra.img w={20} src={Favicon256x256.src} borderRadius="md" />
-            </div>
+            <chakra.img w={20} src={PaimonIcon.src} borderRadius="md" />
 
             <VStack align="stretch" spacing={4}>
               <Heading>

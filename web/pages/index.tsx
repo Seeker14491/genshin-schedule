@@ -4,7 +4,7 @@ import { Box, Button, ButtonGroup, chakra, Heading, Icon, VStack } from "@chakra
 import ConfigProvider from "../components/ConfigProvider";
 import { createApiClient } from "../utils/api";
 import Layout from "../components/Layout";
-import PaimonIcon from "../assets/welcome/PaimonIcon.webp";
+import PaimonIcon from "../assets/PaimonIcon.webp";
 import ResinCalculator from "../assets/welcome/ResinCalculator.webp";
 import UserSignIn from "../components/Auth/UserSignIn";
 import { FormattedMessage } from "react-intl";

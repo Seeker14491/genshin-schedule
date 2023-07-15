@@ -32,6 +32,7 @@ namespace GenshinSchedule.SyncServer.Discord
 
             var client = new DiscordShardedClient(new DiscordSocketConfig
             {
+                GatewayIntents = GatewayIntents.AllUnprivileged,
                 LogLevel         = LogSeverity.Debug,
                 LargeThreshold   = 0,
                 MessageCacheSize = 0

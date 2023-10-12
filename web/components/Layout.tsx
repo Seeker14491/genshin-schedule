@@ -46,7 +46,7 @@ const Layout = ({
             <Header
               menu={
                 <>
-                  <NextLink href="/home/notifications" passHref>
+                  <NextLink href="/home/notifications" passHref legacyBehavior>
                     <Link>
                       <Tooltip label={<FormattedMessage defaultMessage="Notifications" />}>
                         <span>
@@ -56,7 +56,7 @@ const Layout = ({
                     </Link>
                   </NextLink>
 
-                  <NextLink href="/home/statistics" passHref>
+                  <NextLink href="/home/statistics" passHref legacyBehavior>
                     <Link>
                       <Tooltip label={<FormattedMessage defaultMessage="Statistics" />}>
                         <span>

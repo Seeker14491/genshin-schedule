@@ -131,7 +131,7 @@ const Resin = () => {
             <HStack spacing={1} ml={-4}>
               <Icon as={Bell} w={3} fontSize="xs" />
 
-              <NextLink href="/home/notifications/queue" passHref>
+              <NextLink href="/home/notifications/queue" passHref legacyBehavior>
                 <Link>
                   <EstimatorByNotifyMark />
                 </Link>

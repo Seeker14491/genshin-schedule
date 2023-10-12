@@ -47,7 +47,7 @@ const Info = () => {
           <Spacer />
           <Tooltip label={<FormattedMessage defaultMessage="Queue" />}>
             <span>
-              <NextLink href="/home/notifications/queue" passHref>
+              <NextLink href="/home/notifications/queue" passHref legacyBehavior>
                 <Link color={useColorModeValue("blue.500", "blue.300")}>
                   <Icon as={List} fontSize="md" />
                 </Link>

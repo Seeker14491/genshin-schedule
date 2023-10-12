@@ -9,7 +9,7 @@ import { Settings } from "react-feather";
 const Header = ({ menu }: { menu?: ReactNode }) => {
   return (
     <HStack as="nav" p={4} spacing={2}>
-      <NextLink href="/home" passHref>
+      <NextLink href="/home" passHref legacyBehavior>
         <Link fontFamily="Genshin" fontWeight="bold" flexShrink={0}>
           <HStack spacing={2}>
             <chakra.img alt="logo" src={PaimonIcon.src} w={6} h={6} borderRadius="md" />
@@ -25,7 +25,7 @@ const Header = ({ menu }: { menu?: ReactNode }) => {
       <HStack spacing={4}>
         {menu}
 
-        <NextLink href="/settings" passHref>
+        <NextLink href="/settings" passHref legacyBehavior>
           <Link flexShrink={0}>
             <Tooltip label={<FormattedMessage defaultMessage="Settings" />}>
               <span>

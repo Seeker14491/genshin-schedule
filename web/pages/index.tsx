@@ -95,7 +95,14 @@ const Welcome = ({ language }: Props) => {
 
                 <Box width="max-content" height="auto">
                   <Box width="50%" height="auto">
-                    <NextImage src={ResinCalculator} />
+                    <NextImage
+                      src={ResinCalculator}
+                      style={{
+                        maxWidth: "100%",
+                        height: "auto",
+                      }}
+                      alt=""
+                    />
                   </Box>
                 </Box>
               </VStack>

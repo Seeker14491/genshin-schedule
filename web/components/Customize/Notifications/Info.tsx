@@ -21,9 +21,8 @@ import Success from "../../../assets/notifications/Success.webp";
 import MessageDisplay from "./MessageDisplay";
 import NextLink from "next/link";
 import { FormattedMessage } from "react-intl";
-import { Bell, List, MessageSquare, Link as LinkIcon } from "react-feather";
+import { Bell, List, Link as LinkIcon } from "react-feather";
 
-export const DiscordServerInvite = "https://discord.gg/XdPQeEaBE7";
 export const DiscordBotInvite =
   "https://discord.com/oauth2/authorize?client_id=786827003164098610&scope=bot&permissions=379968";
 
@@ -79,38 +78,12 @@ const Info = () => {
             <div>
               <FormattedMessage
                 defaultMessage={
-                  "1. Join the {server}, or {invite} to your server. Either way, the bot and you need to share a common server in order for the bot to be able to message you."
+                  "1. Invite the bot to your server. The bot and you need to share a common server in order for the bot to be able to message you."
                 }
-                values={{
-                  server: (
-                    <Link href={DiscordServerInvite} color={useColorModeValue("blue.500", "blue.300")} isExternal>
-                      <FormattedMessage defaultMessage="Genshin Schedule server" />
-                    </Link>
-                  ),
-                  invite: (
-                    <Link href={DiscordBotInvite} color={useColorModeValue("blue.500", "blue.300")} isExternal>
-                      <FormattedMessage defaultMessage="invite the bot" />
-                    </Link>
-                  ),
-                }}
               />
             </div>
 
             <Wrap>
-              <WrapItem>
-                <Button
-                  as="a"
-                  href={DiscordServerInvite}
-                  target="_blank"
-                  leftIcon={<Icon as={MessageSquare} />}
-                  color="white"
-                  bg="#7289da"
-                  colorScheme="none"
-                >
-                  <FormattedMessage defaultMessage="Join the server" />
-                </Button>
-              </WrapItem>
-
               <WrapItem>
                 <Button
                   as="a"

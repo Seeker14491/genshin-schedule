@@ -41,64 +41,49 @@ msgctxt "components.ChangelogModal.3a15e6"
 msgid "Update changelog"
 msgstr ""
 
-#: components/Customize/Notifications/Info.tsx:124
+#: components/Customize/Notifications/Info.tsx:97
 msgctxt "components.Customize.Notifications.Info.049a4d"
 msgid "Invite the bot"
 msgstr ""
 
-#: components/Customize/Notifications/Info.tsx:80
-msgctxt "components.Customize.Notifications.Info.09b163"
-msgid "1. Join the {server}, or {invite} to your server. Either way, the bot and you need to share a common server in order for the bot to be able to message you."
-msgstr ""
-
-#: components/Customize/Notifications/Info.tsx:67
+#: components/Customize/Notifications/Info.tsx:66
 msgctxt "components.Customize.Notifications.Info.0f789d"
 msgid "Settings"
 msgstr ""
 
-#: components/Customize/Notifications/Info.tsx:62
+#: components/Customize/Notifications/Info.tsx:61
 msgctxt "components.Customize.Notifications.Info.129397"
 msgid "Genshin Schedule has a Discord bot that can send you notifications when your resin reaches a certain level (configurable in {settings})."
 msgstr ""
 
-#: components/Customize/Notifications/Info.tsx:145
+#: components/Customize/Notifications/Info.tsx:118
 msgctxt "components.Customize.Notifications.Info.2a76fe"
 msgid "3. Copy the following message (you must be signed in) and send it to the bot via DM. Don't share this message with anyone else, ever!"
 msgstr ""
 
-#: components/Customize/Notifications/Info.tsx:45
+#: components/Customize/Notifications/Info.tsx:44
 msgctxt "components.Customize.Notifications.Info.34089d"
 msgid "Notifications"
 msgstr ""
 
-#: components/Customize/Notifications/Info.tsx:153
+#: components/Customize/Notifications/Info.tsx:126
 msgctxt "components.Customize.Notifications.Info.619742"
 msgid "The bot should inform you that the process succeeded:"
 msgstr ""
 
-#: components/Customize/Notifications/Info.tsx:87
-msgctxt "components.Customize.Notifications.Info.70feee"
-msgid "Genshin Schedule server"
-msgstr ""
-
-#: components/Customize/Notifications/Info.tsx:92
-msgctxt "components.Customize.Notifications.Info.8f57ce"
-msgid "invite the bot"
-msgstr ""
-
-#: components/Customize/Notifications/Info.tsx:132
+#: components/Customize/Notifications/Info.tsx:105
 msgctxt "components.Customize.Notifications.Info.a7c1c8"
 msgid "2. Make sure DMs from server members are enabled, otherwise the bot cannot message you."
 msgstr ""
 
-#: components/Customize/Notifications/Info.tsx:110
-msgctxt "components.Customize.Notifications.Info.aebf2a"
-msgid "Join the server"
-msgstr ""
-
-#: components/Customize/Notifications/Info.tsx:49
+#: components/Customize/Notifications/Info.tsx:48
 msgctxt "components.Customize.Notifications.Info.e180cd"
 msgid "Queue"
+msgstr ""
+
+#: components/Customize/Notifications/Info.tsx:79
+msgctxt "components.Customize.Notifications.Info.e7095b"
+msgid "1. Invite the bot to your server. The bot and you need to share a common server in order for the bot to be able to message you."
 msgstr ""
 
 #: components/Customize/Notifications/MessageDisplay.tsx:34
@@ -571,47 +556,47 @@ msgctxt "pages.home.notifications.queue.fcf2e1"
 msgid "There are no notifications in queue."
 msgstr ""
 
-#: pages/index.tsx:113
+#: pages/index.tsx:111
 msgctxt "pages.index.37b47a"
 msgid "Signing in will enable synchronization across multiple devices. If you do not already have an account, it will be created automatically."
 msgstr ""
 
-#: pages/index.tsx:110
+#: pages/index.tsx:108
 msgctxt "pages.index.49026d"
 msgid "Sign in"
 msgstr ""
 
-#: pages/index.tsx:94
+#: pages/index.tsx:92
 msgctxt "pages.index.4c4a8d"
 msgid "Tracks your resin and estimates when it will recharge without having to open the game."
 msgstr ""
 
-#: pages/index.tsx:58
+#: pages/index.tsx:56
 msgctxt "pages.index.56df07"
 msgid "Mobile-friendly, dark mode, supports syncing across devices, and can ping you on Discord if your resin reaches a configurable level."
 msgstr ""
 
-#: pages/index.tsx:84
+#: pages/index.tsx:82
 msgctxt "pages.index.657a74"
 msgid "Features"
 msgstr ""
 
-#: pages/index.tsx:91
+#: pages/index.tsx:89
 msgctxt "pages.index.96d48b"
 msgid "Resin calculator"
 msgstr ""
 
-#: pages/index.tsx:55
+#: pages/index.tsx:53
 msgctxt "pages.index.b96242"
 msgid "A simple app for keeping track of your resin in Genshin Impact."
 msgstr ""
 
-#: pages/index.tsx:77
+#: pages/index.tsx:75
 msgctxt "pages.index.c0ef70"
 msgid "GitHub"
 msgstr ""
 
-#: pages/index.tsx:52
+#: pages/index.tsx:50
 msgctxt "pages.index.e3e15c"
 msgid "Genshin Schedule"
 msgstr ""

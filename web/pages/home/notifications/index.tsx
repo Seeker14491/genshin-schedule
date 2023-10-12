@@ -4,7 +4,6 @@ import { GetServerSideProps } from "next";
 import { createApiClient, WebData } from "../../../utils/api";
 import ConfigProvider from "../../../components/ConfigProvider";
 import InfoContainer from "../../../components/Customize/Notifications/InfoContainer";
-import DiscordWidget from "../../../components/Customize/Notifications/DiscordWidget";
 import Info from "../../../components/Customize/Notifications/Info";
 import { Language } from "../../../langs";
 
@@ -37,7 +36,7 @@ const Home = ({ language, data }: Props) => {
   return (
     <ConfigProvider initial={data} language={language}>
       <Layout title={["Notifications"]}>
-        <InfoContainer main={<Info />} sub={<DiscordWidget />} />
+        <InfoContainer main={<Info />} />
       </Layout>
     </ConfigProvider>
   );

@@ -45,13 +45,13 @@ export function useServerTimeZone() {
 
   switch (server) {
     case "America":
-      return "America/New_York";
+      return "UTC-5";
 
     case "Europe":
-      return "Europe/Berlin";
+      return "UTC+1";
 
     case "Asia":
-      return "Asia/Tokyo";
+      return "UTC+9";
 
     case "TW, HK, MO":
       return "UTC+8";

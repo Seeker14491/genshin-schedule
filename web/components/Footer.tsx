@@ -19,7 +19,7 @@ const Footer = ({ showShortcuts }: { showShortcuts?: () => void }) => {
 
       <Text fontSize="sm">
         <FormattedMessage
-          defaultMessage="This site is a fork of the original, now offline, Genshin Schedule. This fork is mainained by {seekr}. The original was written by {chiya} and {contrib}."
+          defaultMessage="This site is a fork of the original, now offline, Genshin Schedule. This fork is maintained by {seekr}. The original was written by {chiya} and {contrib}."
           values={{
             seekr: (
               <Link href="https://github.com/Seeker14491" target="_blank" rel="noopener noreferrer" color={linkColor}>

@@ -126,8 +126,9 @@ export class ApiClient {
       const response = await this.request<{ token: string }>("PATCH", "sync", request, "application/json-patch+json");
       return { type: "success", token: response.token };
     } catch (e) {
-      if (e instanceof ApiError && e.status === 400) {
-        return { type: "failure", ...(e.body as WebData) };
+      // the server responds with its latest data if the token is outdated; other errors must not reset local data
+      if (e instanceof ApiError && e.status === 400 && isWebData(e.body)) {
+        return { type: "failure", ...e.body };
       }
 
       throw e;
@@ -145,6 +146,10 @@ export class ApiClient {
   async deleteNotification(key: string) {
     await this.request("DELETE", `notifications/${encodeURIComponent(key)}`);
   }
+}
+
+function isWebData(data: unknown): data is WebData {
+  return !!data && typeof data === "object" && "token" in data && "data" in data;
 }
 
 // the server responds with either plain text or ASP.NET validation problem details

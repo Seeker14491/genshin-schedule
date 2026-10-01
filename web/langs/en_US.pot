@@ -3,7 +3,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 
 #: components/Footer.tsx:21
-msgid "This site is a fork of the original, now offline, Genshin Schedule. This fork is mainained by {seekr}. The original was written by {chiya} and {contrib}."
+msgid "This site is a fork of the original, now offline, Genshin Schedule. This fork is maintained by {seekr}. The original was written by {chiya} and {contrib}."
 msgstr ""
 
 #: components/Footer.tsx:41
@@ -206,135 +206,135 @@ msgstr ""
 msgid "Overwrite"
 msgstr ""
 
-#: components/Settings/AccountButtons.tsx:134
+#: components/Settings/AccountButtons.tsx:138
 msgid "Input is not validated. Corrupted input can make data recovery impossible."
 msgstr ""
 
-#: components/Settings/AccountButtons.tsx:139
+#: components/Settings/AccountButtons.tsx:143
 msgid "You can export your account data for backup and restore."
 msgstr ""
 
-#: components/Settings/AccountButtons.tsx:141
+#: components/Settings/AccountButtons.tsx:145
 msgid "This action cannot be undone."
 msgstr ""
 
-#: components/Settings/AccountButtons.tsx:176
+#: components/Settings/AccountButtons.tsx:180
 msgid "Manage account"
 msgstr ""
 
-#: components/Settings/AccountButtons.tsx:197
+#: components/Settings/AccountButtons.tsx:201
 msgid "Submit"
 msgstr ""
 
-#: components/Settings/AccountButtons.tsx:202
+#: components/Settings/AccountButtons.tsx:206
 msgid "Cancel"
 msgstr ""
 
-#: components/Settings/AccountButtons.tsx:210
+#: components/Settings/AccountButtons.tsx:214
 msgid "You can change your account username and password."
 msgstr ""
 
-#: components/Settings/AccountButtons.tsx:215
+#: components/Settings/AccountButtons.tsx:219
 msgid "Username"
 msgstr ""
 
-#: components/Settings/AccountButtons.tsx:220
+#: components/Settings/AccountButtons.tsx:224
 msgid "New username"
 msgstr ""
 
-#: components/Settings/AccountButtons.tsx:229
+#: components/Settings/AccountButtons.tsx:233
 msgid "Password"
 msgstr ""
 
-#: components/Settings/AccountButtons.tsx:235
+#: components/Settings/AccountButtons.tsx:239
 msgid "New password"
 msgstr ""
 
-#: components/Settings/AccountButtons.tsx:243
+#: components/Settings/AccountButtons.tsx:247
 msgid "Linked Discord ID"
 msgstr ""
 
-#: components/Settings/AccountButtons.tsx:262
+#: components/Settings/AccountButtons.tsx:266
 msgid "Sign out"
 msgstr ""
 
-#: components/Settings/Settings.tsx:61
+#: components/Settings/Settings.tsx:65
 msgid "Dark mode"
 msgstr ""
 
-#: components/Settings/Settings.tsx:86
+#: components/Settings/Settings.tsx:98
 msgid "Language"
 msgstr ""
 
-#: components/Settings/Settings.tsx:99
+#: components/Settings/Settings.tsx:111
 msgid "Default"
 msgstr ""
 
-#: components/Settings/Settings.tsx:107
+#: components/Settings/Settings.tsx:119
 msgid "Add new language"
 msgstr ""
 
-#: components/Settings/Settings.tsx:120
+#: components/Settings/Settings.tsx:132
 msgid "Background"
 msgstr ""
 
-#: components/Settings/Settings.tsx:124
+#: components/Settings/Settings.tsx:136
 msgid "Paimon"
 msgstr ""
 
-#: components/Settings/Settings.tsx:125
+#: components/Settings/Settings.tsx:137
 msgid "Klee"
 msgstr ""
 
-#: components/Settings/Settings.tsx:126
+#: components/Settings/Settings.tsx:138
 msgid "Diluc"
 msgstr ""
 
-#: components/Settings/Settings.tsx:127
+#: components/Settings/Settings.tsx:139
 msgid "Tartaglia"
 msgstr ""
 
-#: components/Settings/Settings.tsx:128
+#: components/Settings/Settings.tsx:140
 msgid "Zhongli"
 msgstr ""
 
-#: components/Settings/Settings.tsx:129
+#: components/Settings/Settings.tsx:141
 msgid "Xiao"
 msgstr ""
 
-#: components/Settings/Settings.tsx:130
+#: components/Settings/Settings.tsx:142
 msgid "Hu Tao"
 msgstr ""
 
-#: components/Settings/Settings.tsx:131
+#: components/Settings/Settings.tsx:143
 msgid "Kazuha"
 msgstr ""
 
-#: components/Settings/Settings.tsx:132
+#: components/Settings/Settings.tsx:144
 msgid "Ayaka"
 msgstr ""
 
-#: components/Settings/Settings.tsx:133
+#: components/Settings/Settings.tsx:145
 msgid "Disabled"
 msgstr ""
 
-#: components/Settings/Settings.tsx:146
+#: components/Settings/Settings.tsx:158
 msgid "Resin estimation mode"
 msgstr ""
 
-#: components/Settings/Settings.tsx:150
+#: components/Settings/Settings.tsx:162
 msgid "Time steps (2h, 4h, 8h…)"
 msgstr ""
 
-#: components/Settings/Settings.tsx:151
+#: components/Settings/Settings.tsx:163
 msgid "Value steps (20, 40, 60)"
 msgstr ""
 
-#: components/Settings/Settings.tsx:164
+#: components/Settings/Settings.tsx:176
 msgid "Resin calculator buttons"
 msgstr ""
 
-#: components/Settings/Settings.tsx:200
+#: components/Settings/Settings.tsx:213
 msgid "Send resin notification at"
 msgstr ""
 
@@ -358,43 +358,43 @@ msgstr ""
 msgid "Show keyboard shortcuts"
 msgstr ""
 
-#: components/Statistics/Statistics.tsx:25
+#: components/Statistics/Statistics.tsx:36
 msgid "Resins spent"
 msgstr ""
 
-#: components/Statistics/Statistics.tsx:51
+#: components/Statistics/Statistics.tsx:62
 msgid "Range"
 msgstr ""
 
-#: components/Statistics/Statistics.tsx:54
+#: components/Statistics/Statistics.tsx:65
 msgid "Duration"
 msgstr ""
 
-#: components/Statistics/Statistics.tsx:84
+#: components/Statistics/Statistics.tsx:95
 msgid "Reset statistics"
 msgstr ""
 
-#: components/Statistics/Statistics.tsx:103
+#: components/Statistics/Statistics.tsx:114
 msgid "Reset"
 msgstr ""
 
-#: components/Statistics/Statistics.tsx:143
+#: components/Statistics/Statistics.tsx:165
 msgid "Today"
 msgstr ""
 
-#: components/Statistics/Statistics.tsx:154
+#: components/Statistics/Statistics.tsx:177
 msgid "Total"
 msgstr ""
 
-#: components/Statistics/Statistics.tsx:157
+#: components/Statistics/Statistics.tsx:181
 msgid "{percent}% efficiency"
 msgstr ""
 
-#: components/Statistics/Statistics.tsx:181
+#: components/Statistics/Statistics.tsx:206
 msgid "Peak"
 msgstr ""
 
-#: components/Statistics/Statistics.tsx:189
+#: components/Statistics/Statistics.tsx:214
 msgid "Never"
 msgstr ""
 

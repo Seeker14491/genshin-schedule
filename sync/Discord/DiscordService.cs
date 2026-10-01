@@ -1,97 +1,70 @@
-using System.Threading;
-using System.Threading.Tasks;
 using Discord;
 using Discord.WebSocket;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 
-namespace GenshinSchedule.SyncServer.Discord
+namespace GenshinSchedule.SyncServer.Discord;
+
+/// <summary>
+/// Runs the Discord bot if <c>Discord:Token</c> is configured.
+/// </summary>
+public class DiscordService(IConfiguration configuration, CommandHandler commands, NotificationService notification, ILogger<DiscordService> logger) : BackgroundService
 {
-    public class DiscordService : BackgroundService
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        readonly IConfiguration _configuration;
-        readonly CommandHandler _commands;
-        readonly NotificationService _notification;
-        readonly ILogger<DiscordService> _logger;
+        var token = configuration["Discord:Token"];
 
-        public DiscordService(IConfiguration configuration, CommandHandler commands, NotificationService notification, ILogger<DiscordService> logger)
+        if (string.IsNullOrEmpty(token))
+            return;
+
+        await commands.InitializeAsync();
+
+        var client = new DiscordShardedClient(new DiscordSocketConfig
         {
-            _configuration = configuration;
-            _commands      = commands;
-            _notification  = notification;
-            _logger        = logger;
+            GatewayIntents   = GatewayIntents.AllUnprivileged,
+            LogLevel         = LogSeverity.Debug,
+            LargeThreshold   = 0,
+            MessageCacheSize = 0
+        });
+
+        client.Log += log =>
+        {
+            logger.Log(ConvertLogLevel(log.Severity), log.Exception, "{Message}", log.Message);
+            return Task.CompletedTask;
+        };
+
+        client.MessageReceived += message =>
+        {
+            if (message is IUserMessage userMessage)
+                _ = Task.Run(() => commands.HandleAsync(client, userMessage), stoppingToken);
+
+            return Task.CompletedTask;
+        };
+
+        await client.LoginAsync(TokenType.Bot, token);
+        await client.StartAsync();
+
+        await client.SetGameAsync("with travelers");
+
+        try
+        {
+            if (bool.TryParse(configuration["Discord:DisableNotifications"], out var disableNotifications) && disableNotifications)
+                await Task.Delay(Timeout.Infinite, stoppingToken);
+            else
+                await notification.RunAsync(client, stoppingToken);
         }
-
-        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+        catch (OperationCanceledException) { }
+        finally
         {
-            var token = _configuration["Discord:Token"];
-
-            if (string.IsNullOrEmpty(token))
-                return;
-
-            var client = new DiscordShardedClient(new DiscordSocketConfig
-            {
-                GatewayIntents = GatewayIntents.AllUnprivileged,
-                LogLevel         = LogSeverity.Debug,
-                LargeThreshold   = 0,
-                MessageCacheSize = 0
-            });
-
-            client.Log += log =>
-            {
-                _logger.Log(ConvertLogLevel(log.Severity), log.Exception, log.Message);
-                return Task.CompletedTask;
-            };
-
-            client.MessageReceived += message =>
-            {
-                if (message is IUserMessage userMessage)
-                    Task.Run(() => _commands.HandleAsync(client, userMessage), stoppingToken);
-
-                return Task.CompletedTask;
-            };
-
-            await client.LoginAsync(TokenType.Bot, token);
-            await client.StartAsync();
-
-            await client.SetGameAsync("with travelers");
-
-            try
-            {
-                if (bool.TryParse(_configuration["Discord:DisableNotifications"], out var disableNotification) && disableNotification)
-                    await Task.Delay(-1, stoppingToken);
-                else
-                    await _notification.RunAsync(client, stoppingToken);
-            }
-            finally
-            {
-                await client.StopAsync();
-            }
-        }
-
-        public static LogLevel ConvertLogLevel(LogSeverity level)
-        {
-            switch (level)
-            {
-                default:
-                    return LogLevel.Trace;
-
-                case LogSeverity.Verbose:
-                    return LogLevel.Debug;
-
-                case LogSeverity.Info:
-                    return LogLevel.Information;
-
-                case LogSeverity.Warning:
-                    return LogLevel.Warning;
-
-                case LogSeverity.Error:
-                    return LogLevel.Error;
-
-                case LogSeverity.Critical:
-                    return LogLevel.Critical;
-            }
+            await client.StopAsync();
         }
     }
+
+    public static LogLevel ConvertLogLevel(LogSeverity level) => level switch
+    {
+        LogSeverity.Verbose  => LogLevel.Debug,
+        LogSeverity.Info     => LogLevel.Information,
+        LogSeverity.Warning  => LogLevel.Warning,
+        LogSeverity.Error    => LogLevel.Error,
+        LogSeverity.Critical => LogLevel.Critical,
+        _                    => LogLevel.Trace
+    };
 }

@@ -34,20 +34,10 @@ export const LanguageNames: Record<Language, string> = {
   ru: "русский (Preview)",
 };
 
-export const Localizations: Record<Language, any> = {
+export const Localizations: Record<Language, Record<string, string>> = {
   "en-US": EnUS,
   "zh-Hans": { ...EnUS, ...ZhHans },
   id: { ...EnUS, ...Id },
   "nb-NO": { ...EnUS, ...NbNO },
   ru: { ...EnUS, ...Ru },
 };
-
-export function getTranslatedMessages(id: string) {
-  const results: string[] = [];
-
-  for (const localization of Object.values(Localizations)) {
-    localization[id] && results.push(localization[id]);
-  }
-
-  return results;
-}

@@ -1,22 +1,15 @@
-using System;
 using Microsoft.AspNetCore.JsonPatch;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-namespace GenshinSchedule.SyncServer.Models
+namespace GenshinSchedule.SyncServer.Models;
+
+public class SyncRequest
 {
-    public class SyncRequest
-    {
-        [JsonProperty("token")]
-        public Guid Token { get; set; }
+    public Guid Token { get; set; }
+    public JsonPatchDocument<JObject>? Patch { get; set; }
+}
 
-        [JsonProperty("patch")]
-        public JsonPatchDocument<JObject> Patch { get; set; }
-    }
-
-    public class SyncResponse
-    {
-        [JsonProperty("token")]
-        public Guid Token { get; set; }
-    }
+public class SyncResponse
+{
+    public Guid Token { get; set; }
 }

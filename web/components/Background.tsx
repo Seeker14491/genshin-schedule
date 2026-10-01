@@ -1,30 +1,10 @@
-import React, { memo } from "react";
-import { useConfig } from "../utils/config";
-import {
-  BackgroundKlee,
-  BackgroundPaimon,
-  BackgroundDiluc,
-  BackgroundTartaglia,
-  BackgroundZhongli,
-  BackgroundXiao,
-  BackgroundHuTao,
-  BackgroundKazuha,
-  BackgroundAyaka,
-} from "../assets";
+"use client";
+
 import { chakra } from "@chakra-ui/react";
+import { useConfig } from "@/utils/config";
+import { BackgroundImages } from "@/assets";
 
-export const CharacterBackgrounds = {
-  paimon: BackgroundPaimon.src,
-  klee: BackgroundKlee.src,
-  diluc: BackgroundDiluc.src,
-  tartaglia: BackgroundTartaglia.src,
-  zhongli: BackgroundZhongli.src,
-  xiao: BackgroundXiao.src,
-  hutao: BackgroundHuTao.src,
-  kazuha: BackgroundKazuha.src,
-  ayaka: BackgroundAyaka.src,
-};
-
+/** Faint character art in the bottom right corner of the page. */
 const Background = () => {
   const [value] = useConfig("background");
 
@@ -35,7 +15,8 @@ const Background = () => {
   return (
     <chakra.img
       key={value}
-      src={CharacterBackgrounds[value]}
+      alt=""
+      src={BackgroundImages[value]?.src}
       position="fixed"
       pointerEvents="none"
       userSelect="none"
@@ -52,4 +33,4 @@ const Background = () => {
   );
 };
 
-export default memo(Background);
+export default Background;

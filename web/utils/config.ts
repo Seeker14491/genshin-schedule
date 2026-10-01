@@ -1,37 +1,14 @@
-import {
-  createContext,
-  Dispatch,
-  MutableRefObject,
-  SetStateAction,
-  useCallback,
-  useContext,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
-import { ResinCap } from "../db/resins";
-import { createApiClient, Notification } from "./api";
-import { MultiMap } from "./multiMap";
-import { useListItemDispatch } from "./dispatch";
-import { ServerResetHour, useServerTime } from "./time";
-import { DateTime } from "luxon";
-import { Language } from "../langs";
-import { CharacterBackgrounds } from "../components/Background";
-
-type MapLocation = { lat: number; lng: number };
-
-export const MapZoomMin = 4;
-export const MapZoomMax = 7;
+import { createContext, Dispatch, SetStateAction, useCallback, useContext, useSyncExternalStore } from "react";
+import { ResinCap } from "@/db/resins";
+import type { Language } from "@/langs";
 
 export type Config = {
   language: Language | "default";
   server: "America" | "Europe" | "Asia" | "TW, HK, MO";
   theme: "light" | "dark";
-  background: keyof typeof CharacterBackgrounds | "none";
-  lastChangelog: number;
-  offsetDays: number;
+  background: Background | "none";
   hiddenWidgets: {
-    [key in "clock" | "sync" | "resin" | "tasks" | "domains" | "realm"]?: boolean;
+    [key in "resin" | "realm"]?: boolean;
   };
   resin: {
     value: number;
@@ -46,267 +23,123 @@ export type Config = {
     time: number;
   };
   resinCalcButtons: number[];
-  characters: string[]; // talent mats
-  charactersWeekly: string[]; // weekly talent mats
-  charactersGem: string[]; // ascension gems
-  charactersNormalBoss: string[]; // normal boss mats
-  weapons: string[];
-  artifacts: string[];
-  domainFilter: "all" | "efficiency" | "today" | "noaux";
-  domainFilterType: "all" | "character" | "weapon" | "artifact";
-  domainFilterRegion: "all" | "mondstadt" | "liyue" | "inazuma";
-  itemNotes: { [key: string]: string };
-  itemHighlights: string[];
-  tasks: Task[];
-  taskQuery: string;
-  taskListCompact: boolean;
-  taskListShowHidden: boolean;
-  taskListShowDone: boolean;
-  customizeQuery: string;
-  iconQuery: string;
-  iconListScroll: number;
-  mapState: MapLocation & { zoom: number };
-  mapTaskDefaultZoom: number;
-  mapCreateTask: Task;
-  mapFocusedTask: string | false;
-  mapTaskList: boolean;
   stats: StatFrame[];
   statRetention: number;
 };
 
-export type TaskRefreshTime =
-  | number
-  | "reset"
-  | "monday"
-  | "tuesday"
-  | "wednesday"
-  | "thursday"
-  | "friday"
-  | "saturday"
-  | "sunday";
-
-export type Task = {
-  id: string;
-  icon: string;
-  name: string;
-  description?: string;
-  visible: boolean;
-  location: MapLocation;
-  dueTime: number;
-  refreshTime: TaskRefreshTime;
-  notify?: boolean;
-  highlight?: boolean;
-};
-
 export type StatFrame = {
+  /** Server day in ISO format, e.g. 2020-12-31. */
   id: string;
   time: number;
   resinsSpent: number;
-  tasksDone: number;
 };
 
-const defaultMapCenter = {
-  lat: -24.83,
-  lng: 54.73,
-};
+export const Backgrounds = [
+  "paimon",
+  "klee",
+  "diluc",
+  "tartaglia",
+  "zhongli",
+  "xiao",
+  "hutao",
+  "kazuha",
+  "ayaka",
+] as const;
 
-export const DefaultConfig: Config = {
-  language: "default",
-  server: "America",
-  theme: "light",
-  background: "paimon",
-  lastChangelog: 0,
-  offsetDays: 0,
-  hiddenWidgets: { realm: true },
-  resin: {
-    value: 0,
-    time: Date.now(),
-  },
-  resinEstimateMode: "time",
-  resinNotifyMark: ResinCap,
-  realmEnergy: 0,
-  realmRank: 1,
-  realmCurrency: {
-    value: 0,
-    time: Date.now(),
-  },
-  resinCalcButtons: [-40, -30, -20, -10, 10],
-  characters: [],
-  charactersWeekly: [],
-  charactersGem: [],
-  charactersNormalBoss: [],
-  weapons: [],
-  artifacts: [],
-  domainFilter: "efficiency",
-  domainFilterType: "all",
-  domainFilterRegion: "all",
-  itemNotes: {},
-  itemHighlights: [],
-  tasks: [],
-  taskQuery: "",
-  taskListCompact: false,
-  taskListShowHidden: false,
-  taskListShowDone: false,
-  customizeQuery: "",
-  iconQuery: "",
-  iconListScroll: 0,
-  mapState: {
-    ...defaultMapCenter,
-    zoom: 5,
-  },
-  mapTaskDefaultZoom: 5.6,
-  mapCreateTask: {
-    id: "temp",
-    name: "Iron Chunk",
-    icon: "Iron Chunk",
-    location: defaultMapCenter,
-    dueTime: 0,
-    refreshTime: 86400000,
-    visible: false,
-    notify: false,
-  },
-  mapFocusedTask: false,
-  mapTaskList: true,
-  stats: [],
-  statRetention: 28,
-};
+export type Background = (typeof Backgrounds)[number];
 
 export const ServerList: Config["server"][] = ["America", "Europe", "Asia", "TW, HK, MO"];
-export const ConfigKeys = Object.keys(DefaultConfig) as (keyof Config)[];
+
+/** Creates the default config. `now` is the time new resin and realm currency counters start from. */
+export function getDefaultConfig(now: number): Config {
+  return {
+    language: "default",
+    server: "America",
+    theme: "light",
+    background: "paimon",
+    hiddenWidgets: { realm: true },
+    resin: {
+      value: 0,
+      time: now,
+    },
+    resinEstimateMode: "time",
+    resinNotifyMark: ResinCap,
+    realmEnergy: 0,
+    realmRank: 1,
+    realmCurrency: {
+      value: 0,
+      time: now,
+    },
+    resinCalcButtons: [-40, -30, -20, -10, 10],
+    stats: [],
+    statRetention: 28,
+  };
+}
+
+export const ConfigKeys = Object.keys(getDefaultConfig(0)) as (keyof Config)[];
+
+/** Holds the config and notifies subscribers when it changes. */
+export class ConfigStore {
+  private readonly listeners = new Set<() => void>();
+
+  constructor(private value: Config) {}
+
+  get = () => this.value;
+
+  set = (action: SetStateAction<Config>) => {
+    const value = typeof action === "function" ? action(this.value) : action;
+
+    if (value !== this.value) {
+      this.value = value;
+      this.listeners.forEach((listener) => listener());
+    }
+  };
+
+  subscribe = (listener: () => void) => {
+    this.listeners.add(listener);
+    return () => void this.listeners.delete(listener);
+  };
+}
 
 export const ConfigContext = createContext<{
-  ref: MutableRefObject<Config>;
-  set: Dispatch<SetStateAction<Config>>;
-  events: MultiMap<string, () => void>;
+  store: ConfigStore;
+  /** Config used for server rendering and hydration. */
+  serverConfig: Config;
+  /** Whether the config is synchronized to an account (as opposed to stored in the browser). */
+  synchronized: boolean;
 }>({
-  ref: { current: DefaultConfig },
-  set: () => {},
-  events: new MultiMap(),
+  store: new ConfigStore(getDefaultConfig(0)),
+  serverConfig: getDefaultConfig(0),
+  synchronized: false,
 });
 
+/** Returns the entire config. Prefer `useConfig` which only rerenders when a specific key changes. */
 export function useConfigs(): [Config, Dispatch<SetStateAction<Config>>] {
-  const { ref, set, events } = useContext(ConfigContext);
-  const [, setUpdate] = useState(0);
-
-  useEffect(() => {
-    const handler = () => setUpdate((i) => i + 1);
-
-    for (const key of ConfigKeys) {
-      events.add(key, handler);
-    }
-
-    return () => {
-      for (const key of ConfigKeys) {
-        events.remove(key, handler);
-      }
-    };
-  }, [ref, events]);
-
-  return [ref.current, set];
+  const { store, serverConfig } = useContext(ConfigContext);
+  return [useSyncExternalStore(store.subscribe, store.get, () => serverConfig), store.set];
 }
 
+/** Returns a config value and a setter, similar to `useState`. */
 export function useConfig<TKey extends keyof Config>(
-  key: TKey
+  key: TKey,
 ): [Config[TKey], Dispatch<SetStateAction<Config[TKey]>>] {
-  const { ref, set, events } = useContext(ConfigContext);
-  const [, setUpdate] = useState(0);
+  const { store, serverConfig } = useContext(ConfigContext);
 
-  useEffect(() => {
-    const handler = () => setUpdate((i) => i + 1);
+  const value = useSyncExternalStore(
+    store.subscribe,
+    () => store.get()[key],
+    () => serverConfig[key],
+  );
 
-    events.add(key, handler);
-    return () => {
-      events.remove(key, handler);
-    };
-  }, [key, ref, events]);
+  const setValue = useCallback(
+    (action: SetStateAction<Config[TKey]>) => {
+      store.set((config) => ({
+        ...config,
+        [key]: typeof action === "function" ? (action as (prev: Config[TKey]) => Config[TKey])(config[key]) : action,
+      }));
+    },
+    [store, key],
+  );
 
-  return [
-    ref.current[key],
-    useCallback(
-      (newValue) => {
-        set((value) => ({
-          ...value,
-          [key]: typeof newValue === "function" ? newValue(value[key]) : newValue,
-        }));
-      },
-      [key, set]
-    ),
-  ];
-}
-
-export const SyncContext = createContext<{
-  enabled: boolean;
-  synchronize: () => Promise<void>;
-  callbacks: Set<() => Promise<void>>;
-}>({
-  enabled: false,
-  synchronize: () => Promise.resolve(),
-  callbacks: new Set(),
-});
-
-export function useSync() {
-  return useContext(SyncContext);
-}
-
-export function useSyncEffect(callback: () => Promise<void> | void, deps: any[]) {
-  const { callbacks } = useSync();
-  const lastDeps = useRef(deps);
-
-  useEffect(() => {
-    const handler = async () => {
-      if (!compareDeps(deps, lastDeps.current)) {
-        await callback();
-      }
-
-      lastDeps.current = deps;
-    };
-
-    callbacks.add(handler);
-    return () => {
-      callbacks.delete(handler);
-    };
-  }, [callbacks, callback, ...deps]);
-}
-
-function compareDeps(a: any[], b: any[]) {
-  if (a === b) return true;
-  if (a.length !== b.length) return false;
-
-  for (let i = 0; i < a.length; i++) {
-    if (a[i] !== b[i]) return false;
-  }
-
-  return true;
-}
-
-export function useApiNotification(notification: Notification, enabled: boolean) {
-  useSyncEffect(async () => {
-    const client = createApiClient();
-
-    const fixed: Notification = {
-      ...notification,
-
-      url: new URL(notification.url, window.location.href).href,
-      icon: new URL(notification.icon, window.location.href).href,
-    };
-
-    if (enabled) {
-      await client.setNotification(fixed);
-    } else {
-      await client.deleteNotification(fixed.key);
-    }
-  }, [enabled && notification]);
-}
-
-export function getStatFrameTime(time: DateTime) {
-  time = time.minus({ hours: ServerResetHour });
-  return DateTime.fromObject({ year: time.year, month: time.month, day: time.day });
-}
-
-export function useCurrentStats() {
-  const [stats, setStats] = useConfig("stats");
-  const time = useServerTime(60000);
-  const frameId = getStatFrameTime(time).toSQLDate();
-
-  return useListItemDispatch(stats, setStats, frameId);
+  return [value, setValue];
 }

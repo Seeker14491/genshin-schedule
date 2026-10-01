@@ -1,40 +1,46 @@
-import React, { forwardRef, HTMLProps, memo, useState } from "react";
-import { useMeasuredTextWidth } from "../utils/dom";
+"use client";
+
+import { ComponentProps, forwardRef, useState } from "react";
 import { chakra } from "@chakra-ui/react";
 
-const AutoSizeInput = forwardRef<HTMLInputElement>(
-  ({ value, className, style, onFocus, onBlur, ...props }: HTMLProps<HTMLInputElement>, ref) => {
-    const [focus, setFocus] = useState(false);
-    const width = useMeasuredTextWidth(value as any, className || style);
+/** Borderless number input that is only as wide as its value. Selects its contents when clicked. */
+const AutoSizeInput = forwardRef<
+  HTMLInputElement,
+  Omit<ComponentProps<typeof chakra.input>, "value"> & { value: number }
+>(function AutoSizeInput({ value, onFocus, onBlur, onClick, ...props }, ref) {
+  const [focus, setFocus] = useState(false);
 
-    return (
-      <input
-        ref={ref}
-        className={className}
-        style={{
-          width: (width || 0) + (focus ? 8 : 0),
-          cursor: focus ? undefined : "pointer",
-          ...style,
-        }}
-        value={value}
-        onFocus={(e) => {
-          setFocus(true);
-          onFocus?.(e);
-        }}
-        onBlur={(e) => {
-          setFocus(false);
-          onBlur?.(e);
-        }}
-        {...props}
-      />
-    );
-  }
-);
-
-export default chakra<typeof AutoSizeInput, HTMLProps<HTMLInputElement>>(memo(AutoSizeInput), {
-  baseStyle: {
-    textAlign: "center",
-    background: "inherit",
-    borderRadius: "sm",
-  },
+  return (
+    <chakra.input
+      ref={ref}
+      type="number"
+      textAlign="center"
+      bg="inherit"
+      borderRadius="sm"
+      // digits are all 1ch wide with tabular numbers, so the width fits the value exactly
+      fontVariantNumeric="tabular-nums"
+      style={{ width: `calc(${value.toString().length}ch + ${focus ? 8 : 0}px)` }}
+      cursor={focus ? undefined : "pointer"}
+      css={{
+        appearance: "textfield",
+        "&::-webkit-inner-spin-button, &::-webkit-outer-spin-button": { appearance: "none", margin: 0 },
+      }}
+      value={value.toString()}
+      onFocus={(e) => {
+        setFocus(true);
+        onFocus?.(e);
+      }}
+      onBlur={(e) => {
+        setFocus(false);
+        onBlur?.(e);
+      }}
+      onClick={(e) => {
+        e.currentTarget.select();
+        onClick?.(e);
+      }}
+      {...props}
+    />
+  );
 });
+
+export default AutoSizeInput;

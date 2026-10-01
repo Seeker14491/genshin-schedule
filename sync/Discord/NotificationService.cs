@@ -1,112 +1,98 @@
-using System;
 using System.Globalization;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using Discord;
 using Discord.WebSocket;
 using GenshinSchedule.SyncServer.Database;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 
-namespace GenshinSchedule.SyncServer.Discord
+namespace GenshinSchedule.SyncServer.Discord;
+
+/// <summary>
+/// Polls the notification queue and delivers due notifications to users via DM.
+/// </summary>
+public class NotificationService(IServiceProvider services, ILogger<NotificationService> logger)
 {
-    public class NotificationService
+    public async Task RunAsync(DiscordShardedClient client, CancellationToken cancellationToken = default)
     {
-        readonly IServiceProvider _services;
-        readonly ILogger<NotificationService> _logger;
+        var delay = new AccurateDelay(TimeSpan.FromSeconds(5));
 
-        public NotificationService(IServiceProvider services, ILogger<NotificationService> logger)
+        while (!cancellationToken.IsCancellationRequested)
         {
-            _services = services;
-            _logger   = logger;
-        }
-
-        public async Task RunAsync(DiscordShardedClient client, CancellationToken cancellationToken = default)
-        {
-            var delay = new AccurateDelay(TimeSpan.FromSeconds(5));
-
-            while (!cancellationToken.IsCancellationRequested)
+            await using (var scope = services.CreateAsyncScope())
             {
-                using (var scope = _services.CreateScope())
-                await using (var db = scope.ServiceProvider.GetService<SyncDbContext>())
+                try
                 {
-                    try
-                    {
-                        await NotifyAsync(client, db, cancellationToken);
-                    }
-                    catch (Exception e)
-                    {
-                        _logger.LogWarning(e, "Could not send notifications.");
-                    }
+                    await NotifyAsync(client, scope.ServiceProvider.GetRequiredService<SyncDbContext>(), cancellationToken);
                 }
-
-                await delay.DelayAsync(cancellationToken);
-            }
-        }
-
-        async Task NotifyAsync(DiscordShardedClient client, SyncDbContext db, CancellationToken cancellationToken = default)
-        {
-            var time = DateTimeOffset.UtcNow;
-
-            while (true)
-            {
-                var notifications = await db.Notifications.Include(n => n.User).Where(n => n.Time <= time).OrderBy(n => n.Time).Take(50).ToListAsync(cancellationToken);
-
-                if (notifications.Count == 0)
-                    break;
-
-                await Task.WhenAll(notifications.Select(async notification =>
+                catch (Exception e) when (e is not OperationCanceledException)
                 {
-                    try
-                    {
-                        await SendAsync(client, notification);
-                    }
-                    catch (Exception e)
-                    {
-                        _logger.LogWarning(e, $"Could not send notification '{notification.Key}' to user {notification.User.DiscordUserId}.");
-                    }
-                }));
-
-                db.RemoveRange(notifications);
-
-                await db.SaveChangesAsync(cancellationToken);
-
-                _logger.LogInformation($"Removed {notifications.Count} notifications from queue.");
+                    logger.LogWarning(e, "Could not send notifications.");
+                }
             }
-        }
 
-        async Task SendAsync(DiscordShardedClient client, DbNotification notification)
+            await delay.DelayAsync(cancellationToken);
+        }
+    }
+
+    async Task NotifyAsync(DiscordShardedClient client, SyncDbContext db, CancellationToken cancellationToken)
+    {
+        var time = DateTimeOffset.UtcNow;
+
+        while (true)
         {
-            var recipientId = notification.User.DiscordUserId;
+            var notifications = await db.Notifications.Include(n => n.User).Where(n => n.Time <= time).OrderBy(n => n.Time).Take(50).ToListAsync(cancellationToken);
 
-            if (recipientId == null)
-                return;
+            if (notifications.Count == 0)
+                break;
 
-            // use rest to retrieve user because users are not cached in sharded clients
-            var recipient = await client.Rest.GetUserAsync(recipientId.Value);
-
-            if (recipient == null)
+            await Task.WhenAll(notifications.Select(async notification =>
             {
-                _logger.LogWarning($"Recipient user {recipientId} not found.");
-                return;
-            }
-
-            await recipient.SendMessageAsync("", embed: new EmbedBuilder
-            {
-                Author = new EmbedAuthorBuilder
+                try
                 {
-                    Name    = notification.Title,
-                    Url     = notification.Url,
-                    IconUrl = notification.Icon
-                },
-                Description = notification.Description,
+                    await SendAsync(client, notification);
+                }
+                catch (Exception e)
+                {
+                    logger.LogWarning(e, "Could not send notification '{Key}' to user {DiscordUserId}.", notification.Key, notification.User?.DiscordUserId);
+                }
+            }));
 
-                Color = uint.TryParse(notification.Color?.TrimStart('#'), NumberStyles.HexNumber, null, out var c) ? new Color(c) : null as Color?
-            }.Build());
+            db.RemoveRange(notifications);
 
-            _logger.LogInformation($"Successfully sent notification '{notification.Key}' to user {recipient.Id}.");
+            await db.SaveChangesAsync(cancellationToken);
+
+            logger.LogInformation("Removed {Count} notifications from queue.", notifications.Count);
         }
+    }
+
+    async Task SendAsync(DiscordShardedClient client, DbNotification notification)
+    {
+        var recipientId = notification.User?.DiscordUserId;
+
+        if (recipientId == null)
+            return;
+
+        // use rest to retrieve user because users are not cached in sharded clients
+        var recipient = await client.Rest.GetUserAsync(recipientId.Value);
+
+        if (recipient == null)
+        {
+            logger.LogWarning("Recipient user {DiscordUserId} not found.", recipientId);
+            return;
+        }
+
+        await recipient.SendMessageAsync("", embed: new EmbedBuilder
+        {
+            Author = new EmbedAuthorBuilder
+            {
+                Name    = notification.Title,
+                Url     = notification.Url,
+                IconUrl = notification.Icon
+            },
+            Description = notification.Description,
+
+            Color = uint.TryParse(notification.Color?.TrimStart('#'), NumberStyles.HexNumber, null, out var c) ? new Color(c) : null
+        }.Build());
+
+        logger.LogInformation("Successfully sent notification '{Key}' to user {DiscordUserId}.", notification.Key, recipient.Id);
     }
 }

@@ -1,22 +1,16 @@
-using System;
 using GenshinSchedule.SyncServer.Database;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-namespace GenshinSchedule.SyncServer.Models
+namespace GenshinSchedule.SyncServer.Models;
+
+public class WebData
 {
-    public class WebData
+    public Guid Token { get; set; }
+    public JObject Data { get; set; } = new();
+
+    public static WebData FromDbModel(DbWebData data) => new()
     {
-        [JsonProperty("token")]
-        public Guid Token { get; set; }
-
-        [JsonProperty("data")]
-        public JObject Data { get; set; }
-
-        public static WebData FromDbModel(DbWebData data) => new WebData
-        {
-            Token = data.Token,
-            Data  = JObject.Parse(data.Data)
-        };
-    }
+        Token = data.Token,
+        Data  = JObject.Parse(data.Data ?? "{}")
+    };
 }

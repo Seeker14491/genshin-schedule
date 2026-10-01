@@ -1,61 +1,44 @@
-using System;
 using System.Net.Http.Headers;
 using System.Security.Claims;
 using System.Text.Encodings.Web;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
-namespace GenshinSchedule.SyncServer
+namespace GenshinSchedule.SyncServer;
+
+public class AuthHandler(IOptionsMonitor<AuthenticationSchemeOptions> options, ILoggerFactory logger, UrlEncoder encoder, AuthHelper auth)
+    : AuthenticationHandler<AuthenticationSchemeOptions>(options, logger, encoder)
 {
-    public class AuthOptions : AuthenticationSchemeOptions { }
+    public static readonly object PayloadKey = new();
+    public const string SchemeName = "Bearer";
 
-    public class AuthHandler : AuthenticationHandler<AuthOptions>
+    static readonly AuthenticationTicket _successTicket = new(new ClaimsPrincipal(new ClaimsIdentity(null, SchemeName)), SchemeName);
+
+    protected override Task<AuthenticateResult> HandleAuthenticateAsync()
     {
-        public static readonly object PayloadKey = new object();
-        public const string SchemeName = "Bearer";
-
-        readonly AuthHelper _auth;
-        readonly ILogger<AuthHandler> _logger;
-
-        public AuthHandler(IOptionsMonitor<AuthOptions> options, ILoggerFactory logger, UrlEncoder encoder, ISystemClock clock, AuthHelper auth) : base(options, logger, encoder, clock)
+        try
         {
-            _auth   = auth;
-            _logger = logger.CreateLogger<AuthHandler>();
+            if (!AuthenticationHeaderValue.TryParse(Request.Headers.Authorization, out var authorization) || authorization.Scheme != Scheme.Name)
+                return Task.FromResult(AuthenticateResult.NoResult());
+
+            if (!auth.TryValidateToken(authorization.Parameter, out var payload))
+                return Task.FromResult(AuthenticateResult.Fail("Authorization failed."));
+
+            Context.Items[PayloadKey] = payload;
+
+            return Task.FromResult(AuthenticateResult.Success(_successTicket));
         }
-
-        static readonly AuthenticationTicket _successTicket = new AuthenticationTicket(new ClaimsPrincipal(new ClaimsIdentity(null, SchemeName)), SchemeName);
-
-#pragma warning disable 1998
-        protected override async Task<AuthenticateResult> HandleAuthenticateAsync()
-#pragma warning restore 1998
+        catch (Exception e)
         {
-            try
-            {
-                if (!AuthenticationHeaderValue.TryParse(Request.Headers["Authorization"], out var authorization) || authorization.Scheme != Scheme.Name)
-                    return AuthenticateResult.NoResult();
+            Logger.LogWarning(e, "Authorization failed.");
 
-                if (!_auth.TryValidateToken(authorization.Parameter, out var payload))
-                    return AuthenticateResult.Fail("Authorization failed.");
-
-                Context.Items[PayloadKey] = payload;
-
-                return AuthenticateResult.Success(_successTicket);
-            }
-            catch (Exception e)
-            {
-                _logger.LogWarning(e, "Authorization failed.");
-
-                return AuthenticateResult.Fail("Authentication failed.");
-            }
+            return Task.FromResult(AuthenticateResult.Fail("Authentication failed."));
         }
     }
+}
 
-    public static class AuthHandlerExtensions
-    {
-        public static int GetUserId(this HttpContext context)
-            => context.Items.TryGetValue(AuthHandler.PayloadKey, out var item) && item is AuthPayload payload ? payload.Id : 0;
-    }
+public static class AuthHandlerExtensions
+{
+    public static int GetUserId(this HttpContext context)
+        => context.Items.TryGetValue(AuthHandler.PayloadKey, out var item) && item is AuthPayload payload ? payload.Id : 0;
 }

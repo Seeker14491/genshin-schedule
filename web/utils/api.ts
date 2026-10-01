@@ -1,16 +1,11 @@
-import { Patch } from "rfc6902";
-import { Config } from "./config";
-import { destroyCookie, parseCookies, setCookie } from "nookies";
-import { GetServerSidePropsContext } from "next";
-import { Language, LanguageAliases } from "../langs";
-import { pick as parseLanguage } from "accept-language-parser";
-import axios, { Axios } from "axios";
+import type { Patch } from "rfc6902";
+import type { Config } from "./config";
 
 export type User = {
   username: string;
   createdTime: number;
   isAdmin: boolean;
-  discordUserId?: number;
+  discordUserId?: string | number | null;
 };
 
 export type WebData = {
@@ -43,126 +38,130 @@ export type SyncRequest = {
   patch: Patch;
 };
 
-export type SyncResponse = {
-  token: string;
-};
+export type SyncResult = { type: "success"; token: string } | ({ type: "failure" } & WebData);
 
-export const ApiUrlDefault = "https://genshin.seekr.pw/api/v1";
+export const ApiUrlDefault = "https://genshin-schedule-sync.caprover.seekr.pw/api/v1";
 export const ApiUrlPublic = process.env.NEXT_PUBLIC_API_PUBLIC || ApiUrlDefault;
 export const ApiUrlInternal = process.env.NEXT_PUBLIC_API_INTERNAL || ApiUrlPublic;
 
-export function createApiClient(ctx?: Pick<GetServerSidePropsContext, "req">): ApiClient {
-  return new ApiClient(ctx?.req ? ApiUrlInternal : ApiUrlPublic, getAuthToken(ctx), getLanguage(ctx));
+/** Name of the cookie holding the auth token. Its value is "null" for users who continue without signing in. */
+export const AuthCookie = "token";
+export const AnonymousToken = "null";
+
+export function isAuthenticated(token: string | undefined): token is string {
+  return token !== undefined && token !== AnonymousToken;
 }
 
-export function getLanguage(ctx?: Pick<GetServerSidePropsContext, "req">): Language {
-  let alias: string;
-
-  if (ctx) {
-    alias = parseLanguage(Object.keys(LanguageAliases), ctx.req.headers["accept-language"] || "") || "";
-  } else {
-    alias = Object.keys(LanguageAliases).find((lang) => lang === navigator.language) || "";
-  }
-
-  return LanguageAliases[alias] || "en-US";
-}
-
-export function getAuthToken(ctx?: Pick<GetServerSidePropsContext, "req">): string | undefined {
-  return parseCookies(ctx).token;
-}
-
-export function setAuthToken(ctx?: Pick<GetServerSidePropsContext, "res">, token?: string) {
-  if (token) {
-    setCookie(ctx, "token", token, {
-      sameSite: "lax",
-      secure: window.location.protocol === "https:",
-      expires: new Date(2100, 1, 1),
-      path: "/",
-    });
-  } else {
-    destroyCookie(ctx, "token", {
-      path: "/",
-    });
+export class ApiError extends Error {
+  constructor(
+    readonly status: number,
+    message: string,
+    readonly body?: unknown,
+  ) {
+    super(message);
   }
 }
 
+/** Client for the sync server API. Use `createApiClient` in the browser or `createServerApiClient` on the server. */
 export class ApiClient {
-  readonly axios: Axios;
+  constructor(
+    readonly baseUrl: string,
+    readonly token?: string,
+  ) {}
 
-  constructor(public baseUrl: string, public token?: string, public language?: Language) {
-    this.axios = axios.create({
-      baseURL: baseUrl,
+  private async request<T>(method: string, path: string, body?: unknown, contentType = "application/json"): Promise<T> {
+    const response = await fetch(`${this.baseUrl}/${path}`, {
+      method,
+      cache: "no-store",
       headers: {
-        authorization: `Bearer ${token}`,
+        ...(this.token && { authorization: `Bearer ${this.token}` }),
+        ...(body !== undefined && { "content-type": contentType }),
       },
+      body: body === undefined ? undefined : JSON.stringify(body),
     });
-  }
 
-  get authenticated() {
-    return typeof this.token === "string" && !this.anonymous;
-  }
+    const text = await response.text();
+    let data: unknown = text;
 
-  get anonymous() {
-    return this.token === "null";
-  }
-
-  async auth(request: AuthRequest): Promise<AuthResponse> {
-    return (await this.axios.post("auth", request)).data;
-  }
-
-  async authBypass(request: Pick<AuthRequest, "username">): Promise<AuthResponse> {
-    return (await this.axios.get(`users/${request.username}/auth`)).data;
-  }
-
-  async updateAuth(request: AuthRequest): Promise<AuthResponse> {
-    return (await this.axios.put("auth", request)).data;
-  }
-
-  async getSelf(): Promise<User> {
-    return (await this.axios.get("auth")).data;
-  }
-
-  async getSync(): Promise<WebData> {
-    return (await this.axios.get("sync")).data;
-  }
-
-  async patchSync(
-    request: SyncRequest
-  ): Promise<({ type: "success" } & SyncResponse) | ({ type: "failure" } & WebData)> {
     try {
-      const response = await this.axios.patch("sync", request, {
-        headers: { "content-type": "application/json-patch+json" },
-      });
+      data = text ? JSON.parse(text) : undefined;
+    } catch {
+      // plain text response
+    }
 
-      return {
-        ...response.data,
-        type: "success",
-      };
-    } catch (e: any) {
-      if (e.response.status === 400) {
-        return {
-          ...e.response.data,
-          type: "failure",
-        };
+    if (!response.ok) {
+      throw new ApiError(
+        response.status,
+        getErrorMessage(data) || `Request failed with status ${response.status}.`,
+        data,
+      );
+    }
+
+    return data as T;
+  }
+
+  auth(request: AuthRequest) {
+    return this.request<AuthResponse>("POST", "auth", request);
+  }
+
+  authBypass(username: string) {
+    return this.request<AuthResponse>("GET", `users/${encodeURIComponent(username)}/auth`);
+  }
+
+  updateAuth(request: AuthRequest) {
+    return this.request<AuthResponse>("PUT", "auth", request);
+  }
+
+  getSelf() {
+    return this.request<User>("GET", "auth");
+  }
+
+  getSync() {
+    return this.request<WebData>("GET", "sync");
+  }
+
+  /** Applies a patch to the synchronized data. Fails with the latest data if `request.token` is outdated. */
+  async patchSync(request: SyncRequest): Promise<SyncResult> {
+    try {
+      const response = await this.request<{ token: string }>("PATCH", "sync", request, "application/json-patch+json");
+      return { type: "success", token: response.token };
+    } catch (e) {
+      // the server responds with its latest data if the token is outdated; other errors must not reset local data
+      if (e instanceof ApiError && e.status === 400 && isWebData(e.body)) {
+        return { type: "failure", ...e.body };
       }
 
       throw e;
     }
   }
 
-  async listNotifications(): Promise<Notification[]> {
-    return (await this.axios.get("notifications")).data;
-  }
-
-  async getNotification(key: string): Promise<Notification> {
-    return (await this.axios.get(`notifications/${key}`)).data;
+  listNotifications() {
+    return this.request<Notification[]>("GET", "notifications");
   }
 
   async setNotification(notification: Notification) {
-    await this.axios.put(`notifications/${notification.key}`, notification);
+    await this.request("PUT", `notifications/${encodeURIComponent(notification.key)}`, notification);
   }
 
   async deleteNotification(key: string) {
-    await this.axios.delete(`notifications/${key}`);
+    await this.request("DELETE", `notifications/${encodeURIComponent(key)}`);
+  }
+}
+
+function isWebData(data: unknown): data is WebData {
+  return !!data && typeof data === "object" && "token" in data && "data" in data;
+}
+
+// the server responds with either plain text or ASP.NET validation problem details
+function getErrorMessage(data: unknown): string | undefined {
+  if (typeof data === "string") {
+    return data;
+  }
+
+  if (data && typeof data === "object" && "title" in data) {
+    const { title, errors } = data as { title: string; errors?: Record<string, string[]> };
+    const first = errors && Object.values(errors).flat()[0];
+
+    return first || title;
   }
 }

@@ -1,54 +1,32 @@
-using System;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using Prometheus;
 using Prometheus.DotNetRuntime;
 
-namespace GenshinSchedule.SyncServer
+namespace GenshinSchedule.SyncServer;
+
+/// <summary>
+/// Publishes Prometheus metrics on a separate port. Only registered in production.
+/// </summary>
+public class MetricsService(ILogger<MetricsService> logger) : BackgroundService
 {
-    public interface IMetricsService : IHostedService { }
+    public const int Port = 9802;
 
-    public class MetricsService : BackgroundService, IMetricsService
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        public const int Port = 9802;
+        using var runtimeStats = DotNetRuntimeStatsBuilder.Default().StartCollecting();
+        using var server = new KestrelMetricServer(Port);
 
-        readonly ILogger<MetricsService> _logger;
-        readonly KestrelMetricServer _server;
-        readonly IDisposable _runtimeStats;
+        logger.LogInformation("Publishing Prometheus metrics on port {Port}.", Port);
 
-        public MetricsService(ILogger<MetricsService> logger)
+        server.Start();
+
+        try
         {
-            _logger       = logger;
-            _server       = new KestrelMetricServer(Port);
-            _runtimeStats = DotNetRuntimeStatsBuilder.Default().StartCollecting();
+            await Task.Delay(Timeout.Infinite, stoppingToken);
         }
-
-        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+        catch (OperationCanceledException) { }
+        finally
         {
-            if (_server == null)
-                return;
-
-            _logger.LogInformation($"Publishing Prometheus metrics on port {Port}.");
-
-            _server.Start();
-
-            try
-            {
-                await Task.Delay(-1, stoppingToken);
-            }
-            finally
-            {
-                await _server.StopAsync();
-            }
-        }
-
-        public override void Dispose()
-        {
-            base.Dispose();
-
-            _runtimeStats.Dispose();
+            await server.StopAsync();
         }
     }
 }

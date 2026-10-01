@@ -1,283 +1,153 @@
-import React, {
-  Dispatch,
-  memo,
-  ReactNode,
-  SetStateAction,
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
-import { createApiClient, WebData } from "../utils/api";
-import { Config, ConfigContext, ConfigKeys, DefaultConfig, SyncContext } from "../utils/config";
-import { MultiMap } from "../utils/multiMap";
-import { PromiseSignal } from "../utils/promiseSignal";
-import { createPatch, Patch } from "rfc6902";
-import { useToast } from "@chakra-ui/react";
-import { IntlProvider } from "react-intl";
-import { Language, Localizations } from "../langs";
+"use client";
 
+import { ReactNode, useContext, useEffect, useState } from "react";
+import { IntlProvider } from "react-intl";
+import { useTheme } from "next-themes";
+import type { WebData } from "@/utils/api";
+import { createApiClient } from "@/utils/auth";
+import { Config, ConfigContext, ConfigKeys, ConfigStore, getDefaultConfig, useConfig } from "@/utils/config";
+import { ConfigSync } from "@/utils/sync";
+import { RenderTimeContext } from "@/utils/time";
+import { Language, Localizations } from "@/langs";
+import { toaster } from "./ui/toaster";
+
+/**
+ * Provides the user's config, localization and the current time to all components.
+ * The config is synchronized to the server if `initial` is given, otherwise it is stored in the browser.
+ */
 const ConfigProvider = ({
   initial,
   language,
+  renderTime,
   children,
 }: {
   initial?: WebData | null;
   language?: Language | null;
+  /** Time at which the page was rendered on the server. */
+  renderTime: number;
   children?: ReactNode;
 }) => {
-  if (initial) {
-    return (
-      <SynchronizedConfigProvider initial={initial} language={language || undefined}>
-        {children}
-      </SynchronizedConfigProvider>
-    );
-  } else {
-    return <LocalConfigProvider language={language || undefined}>{children}</LocalConfigProvider>;
-  }
+  const [{ context, defaults }] = useState(() => {
+    const defaults = getDefaultConfig(renderTime);
+
+    if (initial) {
+      const config = { ...defaults, ...initial.data };
+      return { defaults, context: { store: new ConfigStore(config), serverConfig: config, synchronized: true } };
+    } else {
+      // local config is stored in the browser, so the server renders defaults
+      const config = typeof window === "undefined" ? defaults : readLocalConfig(defaults);
+      return { defaults, context: { store: new ConfigStore(config), serverConfig: defaults, synchronized: false } };
+    }
+  });
+
+  useEffect(() => {
+    const { store } = context;
+
+    if (initial) {
+      const sync = new ConfigSync(
+        store,
+        initial,
+        (data) => ({ ...defaults, ...data }),
+        createApiClient,
+        (error) => {
+          console.error(error);
+
+          toaster.create({
+            type: "error",
+            title: "Synchronization error",
+            description: "Could not synchronize changes at the moment. Please try again later.",
+            closable: true,
+          });
+        },
+      );
+
+      return sync.start();
+    } else {
+      // persist local changes, and pick up changes made in other tabs
+      const unsubscribe = store.subscribe(() => writeLocalConfig(store.get(), defaults));
+      const handleStorage = () => store.set(readLocalConfig(defaults));
+
+      window.addEventListener("storage", handleStorage);
+
+      return () => {
+        unsubscribe();
+        window.removeEventListener("storage", handleStorage);
+      };
+    }
+    // initial data is only read once
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [context, defaults]);
+
+  return (
+    <ConfigContext.Provider value={context}>
+      <RenderTimeContext.Provider value={renderTime}>
+        <LocalizationProvider language={language || "en-US"}>
+          <ThemeSync />
+          {children}
+        </LocalizationProvider>
+      </RenderTimeContext.Provider>
+    </ConfigContext.Provider>
+  );
 };
 
-function getLocalConfig(): Config {
-  const result = { ...DefaultConfig };
+const LocalizationProvider = ({ language, children }: { language: Language; children?: ReactNode }) => {
+  const [configLanguage] = useConfig("language");
+  const locale = configLanguage === "default" ? language : configLanguage;
+
+  useEffect(() => {
+    document.documentElement.lang = locale;
+  }, [locale]);
+
+  return (
+    <IntlProvider locale={locale} messages={Localizations[locale]}>
+      {children}
+    </IntlProvider>
+  );
+};
+
+// applies the theme from the config to the page
+const ThemeSync = () => {
+  const { store } = useContext(ConfigContext);
+  const { setTheme } = useTheme();
+
+  // read the store directly rather than `useConfig`, which returns the server value while hydrating
+  useEffect(() => {
+    const update = () => setTheme(store.get().theme);
+
+    update();
+    return store.subscribe(update);
+  }, [store, setTheme]);
+
+  return null;
+};
+
+// each key is stored separately as JSON; keys with default values are not stored
+function readLocalConfig(defaults: Config): Config {
+  const config = { ...defaults };
 
   for (const key of ConfigKeys) {
     try {
-      (result as any)[key] = JSON.parse(localStorage.getItem(key) || "");
+      const value = localStorage.getItem(key);
+
+      if (value !== null) {
+        (config as Record<string, unknown>)[key] = JSON.parse(value);
+      }
     } catch {
       // ignored
     }
   }
 
-  return result;
+  return config;
 }
 
-function setLocalConfig(config: Config) {
+function writeLocalConfig(config: Config, defaults: Config) {
   for (const key of ConfigKeys) {
-    const value = (config as any)[key];
-    const defaultValue = (DefaultConfig as any)[key];
-
-    if (value === defaultValue) {
+    if (config[key] === defaults[key]) {
       localStorage.removeItem(key);
     } else {
-      localStorage.setItem(key, JSON.stringify(value));
+      localStorage.setItem(key, JSON.stringify(config[key]));
     }
   }
 }
 
-const LocalConfigProvider = ({ language, children }: { language?: Language; children?: ReactNode }) => {
-  const [value, setValueCore] = useState(DefaultConfig);
-  const setValue = useCallback((newValue: SetStateAction<Config>) => {
-    if (typeof newValue === "function") {
-      newValue = newValue(getLocalConfig());
-    }
-
-    setValueCore(newValue);
-
-    // propagate local changes to other tabs by writing to storage
-    setLocalConfig(newValue);
-  }, []);
-
-  useEffect(() => {
-    const updateState = () => setValueCore(getLocalConfig());
-
-    // next.js requires server rendered markup to match the client side,
-    // but since local config is stored in localStorage, it is not accessible from the server.
-    // we use default config for the initial render, then set the correct config only on the client at the second frame
-    updateState();
-
-    // propagate changes from other tabs to local state without writing to storage
-    window.addEventListener("storage", updateState);
-    return () => window.removeEventListener("storage", updateState);
-  }, []);
-
-  return (
-    <ConfigContextRoot value={value} setValue={setValue} language={language}>
-      {children}
-    </ConfigContextRoot>
-  );
-};
-
-const SynchronizedConfigProvider = ({
-  initial,
-  language,
-  children,
-}: {
-  initial: WebData;
-  language?: Language;
-  children?: ReactNode;
-}) => {
-  const [value, setValue] = useState(() => ({ ...DefaultConfig, ...initial.data }));
-  const [, setSync] = useState(false);
-
-  const lastValue = useRef(initial.data);
-  const patchQueue: Patch = useMemo(() => [], []);
-  const patchTimeout = useRef<number>();
-
-  const pushPatches = useCallback(() => {
-    const patch = createPatch(lastValue.current, value);
-    lastValue.current = value;
-    patchQueue.push(...patch);
-  }, [value]);
-
-  useEffect(() => {
-    clearTimeout(patchTimeout.current);
-    patchTimeout.current = window.setTimeout(pushPatches, 200);
-  }, [pushPatches]);
-
-  const toast = useToast();
-  const signals: PromiseSignal<void>[] = useMemo(() => [], []);
-  const callbacks: Set<() => Promise<void>> = useMemo(() => new Set(), []);
-
-  useEffect(() => {
-    let mounted = true;
-    let token = initial.token;
-
-    (async () => {
-      while (mounted) {
-        await new Promise((resolve) => setTimeout(resolve, 100));
-
-        if (!patchQueue.length) {
-          continue;
-        }
-
-        setSync(true);
-
-        const callbackPromise = Promise.all(Array.from(callbacks).map((c) => c()));
-        callbacks.clear();
-
-        try {
-          const patch = [...patchQueue];
-          patchQueue.length = 0;
-
-          const client = createApiClient();
-          const result = await client.patchSync({ patch, token });
-
-          switch (result.type) {
-            case "success":
-              token = result.token;
-              break;
-
-            case "failure":
-              token = result.token;
-              setValue((lastValue.current = { ...DefaultConfig, ...result.data }));
-              break;
-          }
-
-          await callbackPromise;
-
-          signals.forEach((signal) => signal.resolve());
-        } catch (e: any) {
-          console.error(e);
-          signals.forEach((signal) => signal.reject(e));
-
-          toast({
-            position: "top-right",
-            status: "error",
-            title: "Synchronization error",
-            description: "Could not synchronize changes at the moment. Please try again later.",
-            isClosable: true,
-          });
-        } finally {
-          setSync(false);
-          signals.length = 0;
-        }
-      }
-    })();
-
-    return () => {
-      mounted = false;
-    };
-  }, [signals, patchQueue]);
-
-  return (
-    <ConfigContextRoot value={value} setValue={setValue} language={language}>
-      <SyncContext.Provider
-        value={useMemo(
-          () => ({
-            enabled: true,
-            synchronize: () => {
-              pushPatches();
-
-              const signal = new PromiseSignal<void>();
-              signals.push(signal);
-              return signal.promise;
-            },
-            callbacks,
-          }),
-          [pushPatches, signals, callbacks]
-        )}
-      >
-        {children}
-      </SyncContext.Provider>
-    </ConfigContextRoot>
-  );
-};
-
-const ConfigContextRoot = ({
-  value,
-  setValue,
-  language = "en-US",
-  children,
-}: {
-  value: Config;
-  setValue: Dispatch<SetStateAction<Config>>;
-  language?: Language;
-  children?: ReactNode;
-}) => {
-  const ref = useRef(value);
-  const set = useCallback(
-    (newValue: SetStateAction<Config>) => {
-      setValue((value) => {
-        if (typeof newValue === "function") {
-          newValue = newValue(value);
-        }
-
-        return { ...DefaultConfig, ...newValue };
-      });
-    },
-    [setValue]
-  );
-
-  const events = useMemo(() => new MultiMap<string, () => void>(), []);
-
-  useEffect(() => {
-    const changes = ConfigKeys.filter((key) => {
-      const previous = (ref.current as any)[key];
-      const current = (value as any)[key];
-
-      return previous !== current;
-    });
-
-    ref.current = value;
-
-    for (const key of changes) {
-      for (const callback of events.get(key)) {
-        callback();
-      }
-    }
-  }, [value, events]);
-
-  if (value.language !== "default") {
-    language = value.language;
-  }
-
-  return (
-    <ConfigContext.Provider
-      value={useMemo(
-        () => ({
-          ref,
-          set,
-          events,
-        }),
-        [ref, set, events]
-      )}
-    >
-      <IntlProvider locale={language} messages={Localizations[language]}>
-        {children}
-      </IntlProvider>
-    </ConfigContext.Provider>
-  );
-};
-
-export default memo(ConfigProvider);
+export default ConfigProvider;

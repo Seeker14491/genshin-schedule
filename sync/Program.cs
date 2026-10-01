@@ -1,26 +1,45 @@
-using System.Threading.Tasks;
+using GenshinSchedule.SyncServer;
 using GenshinSchedule.SyncServer.Database;
-using Microsoft.AspNetCore;
-using Microsoft.AspNetCore.Hosting;
+using GenshinSchedule.SyncServer.Discord;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
 
-namespace GenshinSchedule.SyncServer
-{
-    public static class Program
-    {
-        public static async Task Main(string[] args)
-        {
-            using var host = CreateHostBuilder(args).Build();
+var builder = WebApplication.CreateBuilder(args);
 
-            using (var scope = host.Services.CreateScope())
-            await using (var context = scope.ServiceProvider.GetRequiredService<SyncDbContext>())
-                await context.Database.MigrateAsync();
+// models predate nullable reference types; don't let `string` properties become implicitly required
+builder.Services.AddControllers(options => options.SuppressImplicitRequiredAttributeForNonNullableReferenceTypes = true)
+       .AddNewtonsoftJson();
 
-            await host.RunAsync();
-        }
+builder.Services.AddCors();
 
-        public static IWebHostBuilder CreateHostBuilder(string[] args)
-            => WebHost.CreateDefaultBuilder<Startup>(args);
-    }
-}
+builder.Services.AddAuthentication(AuthHandler.SchemeName)
+       .AddScheme<AuthenticationSchemeOptions, AuthHandler>(AuthHandler.SchemeName, null);
+
+builder.Services.AddDbContextPool<SyncDbContext>(options => options.UseNpgsql(builder.Configuration.GetConnectionString(nameof(SyncDbContext))));
+
+builder.Services.AddSingleton<AuthHelper>()
+       .AddSingleton<HashHelper>();
+
+if (builder.Environment.IsProduction())
+    builder.Services.AddHostedService<MetricsService>();
+
+builder.Services.AddSingleton<CommandHandler>()
+       .AddSingleton<NotificationService>()
+       .AddHostedService<DiscordService>();
+
+var app = builder.Build();
+
+await using (var scope = app.Services.CreateAsyncScope())
+    await scope.ServiceProvider.GetRequiredService<SyncDbContext>().Database.MigrateAsync();
+
+app.UseCors(cors => cors.AllowAnyHeader()
+                        .AllowAnyMethod()
+                        .AllowAnyOrigin());
+
+app.UseAuthentication();
+app.UseAuthorization();
+
+// all controller routes are prefixed with /api/v1
+app.MapControllers();
+
+await app.RunAsync();

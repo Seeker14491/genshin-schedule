@@ -1,3 +1,5 @@
+import type { StaticImageData } from "next/image";
+import type { Background } from "@/utils/config";
 import BackgroundAyaka from "./game/BackgroundAyaka.webp";
 import BackgroundDiluc from "./game/BackgroundDiluc.webp";
 import BackgroundHuTao from "./game/BackgroundHuTao.webp";
@@ -7,46 +9,19 @@ import BackgroundPaimon from "./game/BackgroundPaimon.webp";
 import BackgroundTartaglia from "./game/BackgroundTartaglia.webp";
 import BackgroundXiao from "./game/BackgroundXiao.webp";
 import BackgroundZhongli from "./game/BackgroundZhongli.webp";
-import RealmCurrency from "./game/Realm Currency.webp";
-import Resin from "./game/Resin.webp";
 
-export {
-  BackgroundAyaka,
-  BackgroundDiluc,
-  BackgroundHuTao,
-  BackgroundKazuha,
-  BackgroundKlee,
-  BackgroundPaimon,
-  BackgroundTartaglia,
-  BackgroundXiao,
-  BackgroundZhongli,
-  RealmCurrency,
-  Resin,
+export { default as PaimonIcon } from "./PaimonIcon.webp";
+export { default as RealmCurrencyIcon } from "./game/Realm Currency.webp";
+export { default as ResinIcon } from "./game/Resin.webp";
+
+export const BackgroundImages: Record<Background, StaticImageData> = {
+  paimon: BackgroundPaimon,
+  klee: BackgroundKlee,
+  diluc: BackgroundDiluc,
+  tartaglia: BackgroundTartaglia,
+  zhongli: BackgroundZhongli,
+  xiao: BackgroundXiao,
+  hutao: BackgroundHuTao,
+  kazuha: BackgroundKazuha,
+  ayaka: BackgroundAyaka,
 };
-
-export function getAssetByName(name: string): string | undefined {
-  switch (name) {
-    case "BackgroundAyaka":
-      return BackgroundAyaka.src;
-    case "BackgroundDiluc":
-      return BackgroundDiluc.src;
-    case "BackgroundHuTao":
-      return BackgroundHuTao.src;
-    case "BackgroundKazuha":
-      return BackgroundKazuha.src;
-    case "BackgroundKlee":
-      return BackgroundKlee.src;
-    case "BackgroundPaimon":
-      return BackgroundPaimon.src;
-    case "BackgroundTartaglia":
-      return BackgroundTartaglia.src;
-    case "BackgroundXiao":
-      return BackgroundXiao.src;
-    case "BackgroundZhongli":
-      return BackgroundZhongli.src;
-    case "Realm Currency":
-      return RealmCurrency.src;
-    case "Resin":
-      return Resin.src;
-  }
-}

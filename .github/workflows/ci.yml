@@ -1,0 +1,54 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  web:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npx prettier --check .
+      - run: npm test
+      - run: npm run build
+
+  sync:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: sync
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: 10.0.x
+      - run: dotnet build
+      - name: Check that database migrations are up to date
+        run: |
+          dotnet tool restore
+          dotnet ef migrations has-pending-model-changes --no-build
+
+  docker:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        image: [web, sync]
+    steps:
+      - uses: actions/checkout@v7
+      - run: docker build -f ${{ matrix.image }}/Dockerfile .

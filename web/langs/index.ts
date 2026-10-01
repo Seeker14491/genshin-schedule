@@ -34,7 +34,7 @@ export const LanguageNames: Record<Language, string> = {
   ru: "русский (Preview)",
 };
 
-export const Localizations: Record<Language, any> = {
+export const Localizations: Record<Language, Record<string, string>> = {
   "en-US": EnUS,
   "zh-Hans": { ...EnUS, ...ZhHans },
   id: { ...EnUS, ...Id },

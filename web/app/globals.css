@@ -1,0 +1,7 @@
+:root {
+  --progress-color: var(--chakra-colors-blue-300);
+}
+
+.dark {
+  --progress-color: white;
+}

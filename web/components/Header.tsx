@@ -1,42 +1,75 @@
-import React, { memo, ReactNode } from "react";
-import PaimonIcon from "../assets/PaimonIcon.webp";
-import { chakra, HStack, Icon, Link, Spacer } from "@chakra-ui/react";
-import NextLink from "next/link";
-import { Tooltip } from "@chakra-ui/tooltip";
-import { FormattedMessage } from "react-intl";
-import { Settings } from "react-feather";
+"use client";
 
-const Header = ({ menu }: { menu?: ReactNode }) => {
+import { ReactNode } from "react";
+import NextLink from "next/link";
+import { chakra, HStack, Link, Spacer } from "@chakra-ui/react";
+import { FormattedMessage, useIntl } from "react-intl";
+import { BellIcon, ChartPieIcon, CircleHelpIcon, SettingsIcon } from "lucide-react";
+import { PaimonIcon } from "@/assets";
+import { Tooltip } from "./ui/tooltip";
+
+export const HelpUrl = "https://github.com/chiyadev/genshin-schedule/wiki";
+
+const Header = () => {
+  const { formatMessage } = useIntl();
+
   return (
-    <HStack as="nav" p={4} spacing={2}>
-      <NextLink href="/home" passHref legacyBehavior>
-        <Link fontFamily="Genshin" fontWeight="bold" flexShrink={0}>
-          <HStack spacing={2}>
-            <chakra.img alt="logo" src={PaimonIcon.src} w={6} h={6} borderRadius="md" />
+    <HStack as="nav" p={4} gap={2}>
+      <Link asChild fontFamily="heading" fontWeight="bold" flexShrink={0}>
+        <NextLink href="/home">
+          <HStack gap={2}>
+            <chakra.img alt="" src={PaimonIcon.src} w={6} h={6} borderRadius="md" />
             <chakra.span fontSize="lg">
               <FormattedMessage defaultMessage="Genshin Schedule" />
             </chakra.span>
           </HStack>
-        </Link>
-      </NextLink>
+        </NextLink>
+      </Link>
 
       <Spacer />
 
-      <HStack spacing={4}>
-        {menu}
-
-        <NextLink href="/settings" passHref legacyBehavior>
-          <Link flexShrink={0}>
-            <Tooltip label={<FormattedMessage defaultMessage="Settings" />}>
-              <span>
-                <Icon as={Settings} />
-              </span>
-            </Tooltip>
-          </Link>
-        </NextLink>
+      <HStack gap={4}>
+        <IconLink href="/home/notifications" label={formatMessage({ defaultMessage: "Notifications" })}>
+          <BellIcon size="1em" />
+        </IconLink>
+        <IconLink href="/home/statistics" label={formatMessage({ defaultMessage: "Statistics" })}>
+          <ChartPieIcon size="1em" />
+        </IconLink>
+        <IconLink href={HelpUrl} external label={formatMessage({ defaultMessage: "Help" })}>
+          <CircleHelpIcon size="1em" />
+        </IconLink>
+        <IconLink href="/settings" label={formatMessage({ defaultMessage: "Settings" })}>
+          <SettingsIcon size="1em" />
+        </IconLink>
       </HStack>
     </HStack>
   );
 };
 
-export default memo(Header);
+const IconLink = ({
+  href,
+  label,
+  external,
+  children,
+}: {
+  href: string;
+  label: string;
+  external?: boolean;
+  children: ReactNode;
+}) => {
+  return (
+    <Tooltip content={label}>
+      {external ? (
+        <Link href={href} target="_blank" rel="noopener noreferrer" aria-label={label}>
+          {children}
+        </Link>
+      ) : (
+        <Link asChild aria-label={label}>
+          <NextLink href={href}>{children}</NextLink>
+        </Link>
+      )}
+    </Tooltip>
+  );
+};
+
+export default Header;

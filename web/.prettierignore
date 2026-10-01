@@ -1,0 +1,3 @@
+langs/*.po
+langs/*.pot
+langs/*.json

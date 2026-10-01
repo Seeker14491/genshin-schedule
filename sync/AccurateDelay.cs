@@ -1,29 +1,21 @@
-using System;
 using System.Diagnostics;
-using System.Threading;
-using System.Threading.Tasks;
 
-namespace GenshinSchedule.SyncServer
+namespace GenshinSchedule.SyncServer;
+
+/// <summary>
+/// Delays until a fixed interval has elapsed since the previous delay, accounting for time spent doing work in between.
+/// </summary>
+public sealed class AccurateDelay(TimeSpan interval)
 {
-    public sealed class AccurateDelay
+    readonly Stopwatch _watch = Stopwatch.StartNew();
+
+    public async Task DelayAsync(CancellationToken cancellationToken = default)
     {
-        readonly TimeSpan _interval;
-        readonly Stopwatch _watch;
+        var delay = interval - _watch.Elapsed;
 
-        public AccurateDelay(TimeSpan interval)
-        {
-            _interval = interval;
-            _watch    = Stopwatch.StartNew();
-        }
+        if (delay > TimeSpan.Zero)
+            await Task.Delay(delay, cancellationToken);
 
-        public async Task DelayAsync(CancellationToken cancellationToken = default)
-        {
-            var delay = _interval - _watch.Elapsed;
-
-            if (delay.Ticks > 0)
-                await Task.Delay(delay, cancellationToken);
-
-            _watch.Restart();
-        }
+        _watch.Restart();
     }
 }

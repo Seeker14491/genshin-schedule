@@ -1,28 +1,21 @@
 using GenshinSchedule.SyncServer.Database;
-using Newtonsoft.Json;
 
-namespace GenshinSchedule.SyncServer.Models
+namespace GenshinSchedule.SyncServer.Models;
+
+public class User
 {
-    public class User
+    public string? Username { get; set; }
+    public long CreatedTime { get; set; }
+    public bool IsAdmin { get; set; }
+
+    // serialized as a string because Discord snowflakes don't fit in a JavaScript number
+    public string? DiscordUserId { get; set; }
+
+    public static User FromDbModel(DbUser user) => new()
     {
-        [JsonProperty("username")]
-        public string Username { get; set; }
-
-        [JsonProperty("createdTime")]
-        public long CreatedTime { get; set; }
-
-        [JsonProperty("isAdmin")]
-        public bool IsAdmin { get; set; }
-
-        [JsonProperty("discordUserId")]
-        public ulong? DiscordUserId { get; set; }
-
-        public static User FromDbModel(DbUser user) => new User
-        {
-            Username      = user.Username,
-            CreatedTime   = user.CreatedTime.ToUnixTimeMilliseconds(),
-            IsAdmin       = user.IsAdmin,
-            DiscordUserId = user.DiscordUserId
-        };
-    }
+        Username      = user.Username,
+        CreatedTime   = user.CreatedTime.ToUnixTimeMilliseconds(),
+        IsAdmin       = user.IsAdmin,
+        DiscordUserId = user.DiscordUserId?.ToString()
+    };
 }

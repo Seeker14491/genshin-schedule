@@ -1,7 +1,6 @@
 import React, { memo } from "react";
 import { HStack, Icon, Stat, StatLabel, StatNumber, Switch } from "@chakra-ui/react";
 import { useConfig } from "../../../utils/config";
-import { trackEvent } from "../../../utils/umami";
 import { FormattedMessage } from "react-intl";
 import { Aperture } from "react-feather";
 
@@ -24,7 +23,6 @@ const ThemeSwitch = () => {
           isChecked={value === "dark"}
           onChange={({ currentTarget: { checked } }) => {
             setValue(checked ? "dark" : "light");
-            trackEvent("theme", checked ? "dark" : "light");
           }}
         />
       </StatNumber>

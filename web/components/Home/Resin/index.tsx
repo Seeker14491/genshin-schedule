@@ -1,7 +1,6 @@
 import React, { memo, useRef, useState } from "react";
 import WidgetWrapper from "../WidgetWrapper";
 import WhiteCard from "../../WhiteCard";
-import { trackEvent } from "../../../utils/umami";
 import { getResinRecharge, ResinCap, roundResin } from "../../../db/resins";
 import SideButtons from "./SideButtons";
 import EstimatorByTime from "./EstimatorByTime";
@@ -67,7 +66,6 @@ const Resin = () => {
                 return estimateModes[(estimateModes.indexOf(mode) + 1) % estimateModes.length];
               });
 
-              trackEvent("resin", "estimateSwitch");
             }}
           />
 
@@ -81,7 +79,6 @@ const Resin = () => {
             value={roundResin(current).toString()}
             onClick={() => {
               resinInput.current?.select();
-              trackEvent("resin", "edit");
             }}
             onChange={({ currentTarget: { valueAsNumber } }) => {
               const oldValue = roundResin(current);

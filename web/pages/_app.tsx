@@ -6,19 +6,12 @@ import Head from "next/head";
 import "./_app.css";
 import "../components/NProgress.css";
 import "inter-ui/inter.css";
-import "leaflet/dist/leaflet.css";
-import "focus-visible/dist/focus-visible";
-import { loadPolyfills } from "../utils/polyfills";
-import { trackView } from "../utils/umami";
 import Script from "next/script";
-
-loadPolyfills();
 
 const fallbackFonts =
   '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol"';
 
-function App({ Component, pageProps, router }: AppProps) {
-  useEffect(() => trackView(router.asPath), [router.asPath]);
+function App({ Component, pageProps }: AppProps) {
   useEffect(() => {
     if ("serviceWorker" in navigator) {
       window.addEventListener("load", () => {

@@ -2,7 +2,6 @@ import React, { memo } from "react";
 import { useConfig, useCurrentStats } from "../../../utils/config";
 import { useServerTime } from "../../../utils/time";
 import { clampResin, getResinRecharge, ResinCap } from "../../../db/resins";
-import { trackEvent } from "../../../utils/umami";
 import { Button, ButtonGroup } from "@chakra-ui/react";
 import { useHotkeys } from "react-hotkeys-hook";
 import { useIntl } from "react-intl";
@@ -34,9 +33,6 @@ const SideButtons = ({ current }: { current: number }) => {
 
                 if (delta < 0) {
                   setStats((stats) => ({ ...stats, resinsSpent: stats.resinsSpent - delta }));
-                  trackEvent("resin", `resinSub${Math.abs(delta)}`);
-                } else {
-                  trackEvent("resin", `resinAdd${delta}`);
                 }
               }}
             />

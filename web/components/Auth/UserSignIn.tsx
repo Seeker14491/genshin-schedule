@@ -17,7 +17,6 @@ import {
   WrapItem,
 } from "@chakra-ui/react";
 import { createApiClient, setAuthToken } from "../../utils/api";
-import { trackEvent } from "../../utils/umami";
 import { useRouter } from "next/router";
 import { FormattedMessage, useIntl } from "react-intl";
 import { Key, LogIn, User, UserX } from "react-feather";
@@ -108,7 +107,6 @@ const UserSignIn = () => {
                 const { token } = await client.auth({ username, password });
 
                 setAuthToken(undefined, token);
-                trackEvent("auth", "signIn");
 
                 setTimeout(() => router.push("/home"));
               } catch (e: any) {
@@ -131,7 +129,6 @@ const UserSignIn = () => {
               leftIcon={<Icon as={UserX} />}
               onClick={() => {
                 setAuthToken(undefined, "null");
-                trackEvent("auth", "signInAnonymous");
 
                 setTimeout(() => router.push("/home"));
               }}

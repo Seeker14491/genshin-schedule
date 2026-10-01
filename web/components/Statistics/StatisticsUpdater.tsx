@@ -23,7 +23,6 @@ const StatisticsUpdater = () => {
             id: frameId,
             time: time.valueOf(),
             resinsSpent: 0,
-            tasksDone: 0,
           }
         );
       }

@@ -1,7 +1,6 @@
 import { Button, Icon, Input, InputGroup, InputLeftAddon, useClipboard } from "@chakra-ui/react";
 import React, { memo, useEffect, useState } from "react";
 import { createApiClient } from "../../../utils/api";
-import { trackEvent } from "../../../utils/umami";
 import { FormattedMessage, useIntl } from "react-intl";
 import { Check, Copy } from "react-feather";
 
@@ -28,7 +27,6 @@ const MessageDisplay = () => {
         leftIcon={<Icon as={hasCopied ? Check : Copy} />}
         onClick={() => {
           onCopy();
-          trackEvent("notifications", "tokenCopy");
         }}
       >
         {hasCopied ? <FormattedMessage defaultMessage="Copied" /> : <FormattedMessage defaultMessage="Copy" />}

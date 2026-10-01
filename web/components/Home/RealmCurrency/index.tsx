@@ -14,7 +14,6 @@ import EstimatorByTime from "./EstimatorByTime";
 import EstimatorByCurrency from "./EstimatorByCurrency";
 import TrustRankInput from "./TrustRankInput";
 import { FormattedUnit, useServerTime } from "../../../utils/time";
-import { trackEvent } from "../../../utils/umami";
 
 const estimateModes: Config["resinEstimateMode"][] = ["time", "value"];
 
@@ -53,7 +52,6 @@ const RealmCurrency = () => {
                 return estimateModes[(estimateModes.indexOf(mode) + 1) % estimateModes.length];
               });
 
-              trackEvent("resin", "estimateSwitch");
             }}
             w={10}
             h={10}

@@ -17,7 +17,6 @@ import {
   useToast,
   VStack,
 } from "@chakra-ui/react";
-import { trackEvent } from "../../../utils/umami";
 import { useRouter } from "next/router";
 import { createApiClient, setAuthToken, User } from "../../../utils/api";
 import { FormattedMessage, useIntl } from "react-intl";
@@ -38,7 +37,6 @@ const AccountManageButton = ({ user }: { user: User }) => {
         leftIcon={<Icon as={UserIcon} />}
         onClick={() => {
           setOpen(true);
-          trackEvent("accountManager", "show");
         }}
       >
         <FormattedMessage defaultMessage="Manage account" />
@@ -66,7 +64,6 @@ const AccountManageButton = ({ user }: { user: User }) => {
                 });
 
                 setAuthToken(undefined, token);
-                trackEvent("accountManager", "updateAuth");
 
                 setTimeout(() => router.reload());
               } catch (e: any) {

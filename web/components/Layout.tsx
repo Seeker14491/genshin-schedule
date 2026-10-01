@@ -5,7 +5,6 @@ import Header from "./Header";
 import Footer from "./Footer";
 import Background from "./Background";
 import KeyHelp from "./ShortcutHelp";
-import ChangelogModal from "./ChangelogModal";
 import NextLink from "next/link";
 import StatisticsUpdater from "./Statistics/StatisticsUpdater";
 import ColorModeOverride from "./ColorModeOverride";
@@ -35,7 +34,6 @@ const Layout = ({
       </Head>
 
       <KeyHelp open={shortcuts} setOpen={setShortcuts} />
-      <ChangelogModal />
       <StatisticsUpdater />
 
       {background && <Background />}

@@ -1,7 +1,6 @@
 import React, { memo } from "react";
 import { HStack, Icon, Select, Stat, StatLabel, StatNumber } from "@chakra-ui/react";
 import { useConfig } from "../../../utils/config";
-import { trackEvent } from "../../../utils/umami";
 import { FormattedMessage, useIntl } from "react-intl";
 import { Image } from "react-feather";
 
@@ -25,7 +24,6 @@ const BackgroundSwitch = () => {
           value={value}
           onChange={({ currentTarget: { value } }) => {
             setValue(value as any);
-            trackEvent("background", value);
           }}
         >
           <option value="paimon">{formatMessageId({ id: "Paimon" })}</option>

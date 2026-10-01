@@ -154,10 +154,6 @@ export class ApiClient {
     return (await this.axios.get("notifications")).data;
   }
 
-  async getNotification(key: string): Promise<Notification> {
-    return (await this.axios.get(`notifications/${key}`)).data;
-  }
-
   async setNotification(notification: Notification) {
     await this.axios.put(`notifications/${notification.key}`, notification);
   }

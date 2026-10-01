@@ -19,7 +19,6 @@ import {
   VStack,
 } from "@chakra-ui/react";
 import { useConfigs } from "../../../utils/config";
-import { trackEvent } from "../../../utils/umami";
 import { FormattedMessage } from "react-intl";
 import { Check, Code, Copy, Edit } from "react-feather";
 
@@ -39,7 +38,6 @@ const ConfigExportButton = () => {
         leftIcon={<Icon as={Code} />}
         onClick={() => {
           setOpen(true);
-          trackEvent("dataManager", "show");
         }}
       >
         <FormattedMessage defaultMessage="Manage data" />
@@ -91,8 +89,6 @@ const ConfigExportButton = () => {
                       description: "Input is invalid.",
                       isClosable: true,
                     });
-                  } finally {
-                    trackEvent("dataManager", "overwrite");
                   }
                 }}
               >
@@ -103,7 +99,6 @@ const ConfigExportButton = () => {
                 leftIcon={<Icon as={hasCopied ? Check : Copy} />}
                 onClick={() => {
                   onCopy();
-                  trackEvent("dataManager", "copy");
                 }}
               >
                 {hasCopied ? <FormattedMessage defaultMessage="Copied" /> : <FormattedMessage defaultMessage="Copy" />}

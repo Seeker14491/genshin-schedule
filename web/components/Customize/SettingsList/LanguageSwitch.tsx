@@ -1,7 +1,6 @@
 import React, { memo } from "react";
 import { HStack, Icon, Select, Stat, StatLabel, StatNumber } from "@chakra-ui/react";
 import { useConfig } from "../../../utils/config";
-import { trackEvent } from "../../../utils/umami";
 import { FormattedMessage, useIntl } from "react-intl";
 import { LanguageNames, Languages } from "../../../langs";
 import { Globe } from "react-feather";
@@ -29,7 +28,6 @@ const LanguageSwitch = () => {
               window.open("https://github.com/Seeker14491/genshin-schedule/tree/master/web/langs");
             } else {
               setValue(value as any);
-              trackEvent("background", value);
             }
           }}
         >

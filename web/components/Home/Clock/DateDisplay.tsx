@@ -1,6 +1,5 @@
 import React, { memo } from "react";
 import { getResinRecharge, roundResin } from "../../../db/resins";
-import { useConfig } from "../../../utils/config";
 import {
   useFormatDurationPart,
   getLargestUnit,
@@ -13,7 +12,6 @@ import { FormattedMessage } from "react-intl";
 
 const DateDisplay = () => {
   const time = useServerTime(1000);
-  const [offsetDays] = useConfig("offsetDays");
 
   const resetTime = getServerResetTime(time);
   const resetDue = resetTime.diff(time);
@@ -26,17 +24,15 @@ const DateDisplay = () => {
         defaultMessage="{duration} until reset"
         values={{ duration: useFormatDurationPart(resetDue, getLargestUnit(resetDue)) }}
       />
-      {!offsetDays && (
-        <span>
-          {" "}
-          (+
-          <FormattedMessage
-            defaultMessage="{value, plural, one {# resin} other {# resins}}"
-            values={{ value: resetResins }}
-          />
-          )
-        </span>
-      )}
+      <span>
+        {" "}
+        (+
+        <FormattedMessage
+          defaultMessage="{value, plural, one {# resin} other {# resins}}"
+          values={{ value: resetResins }}
+        />
+        )
+      </span>
     </div>
   );
 };

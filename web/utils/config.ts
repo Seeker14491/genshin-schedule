@@ -18,20 +18,13 @@ import { DateTime } from "luxon";
 import { Language } from "../langs";
 import { CharacterBackgrounds } from "../components/Background";
 
-type MapLocation = { lat: number; lng: number };
-
-export const MapZoomMin = 4;
-export const MapZoomMax = 7;
-
 export type Config = {
   language: Language | "default";
   server: "America" | "Europe" | "Asia" | "TW, HK, MO";
   theme: "light" | "dark";
   background: keyof typeof CharacterBackgrounds | "none";
-  lastChangelog: number;
-  offsetDays: number;
   hiddenWidgets: {
-    [key in "clock" | "sync" | "resin" | "tasks" | "domains" | "realm"]?: boolean;
+    [key in "resin" | "realm"]?: boolean;
   };
   resin: {
     value: number;
@@ -46,68 +39,14 @@ export type Config = {
     time: number;
   };
   resinCalcButtons: number[];
-  characters: string[]; // talent mats
-  charactersWeekly: string[]; // weekly talent mats
-  charactersGem: string[]; // ascension gems
-  charactersNormalBoss: string[]; // normal boss mats
-  weapons: string[];
-  artifacts: string[];
-  domainFilter: "all" | "efficiency" | "today" | "noaux";
-  domainFilterType: "all" | "character" | "weapon" | "artifact";
-  domainFilterRegion: "all" | "mondstadt" | "liyue" | "inazuma";
-  itemNotes: { [key: string]: string };
-  itemHighlights: string[];
-  tasks: Task[];
-  taskQuery: string;
-  taskListCompact: boolean;
-  taskListShowHidden: boolean;
-  taskListShowDone: boolean;
-  customizeQuery: string;
-  iconQuery: string;
-  iconListScroll: number;
-  mapState: MapLocation & { zoom: number };
-  mapTaskDefaultZoom: number;
-  mapCreateTask: Task;
-  mapFocusedTask: string | false;
-  mapTaskList: boolean;
   stats: StatFrame[];
   statRetention: number;
-};
-
-export type TaskRefreshTime =
-  | number
-  | "reset"
-  | "monday"
-  | "tuesday"
-  | "wednesday"
-  | "thursday"
-  | "friday"
-  | "saturday"
-  | "sunday";
-
-export type Task = {
-  id: string;
-  icon: string;
-  name: string;
-  description?: string;
-  visible: boolean;
-  location: MapLocation;
-  dueTime: number;
-  refreshTime: TaskRefreshTime;
-  notify?: boolean;
-  highlight?: boolean;
 };
 
 export type StatFrame = {
   id: string;
   time: number;
   resinsSpent: number;
-  tasksDone: number;
-};
-
-const defaultMapCenter = {
-  lat: -24.83,
-  lng: 54.73,
 };
 
 export const DefaultConfig: Config = {
@@ -115,8 +54,6 @@ export const DefaultConfig: Config = {
   server: "America",
   theme: "light",
   background: "paimon",
-  lastChangelog: 0,
-  offsetDays: 0,
   hiddenWidgets: { realm: true },
   resin: {
     value: 0,
@@ -131,42 +68,6 @@ export const DefaultConfig: Config = {
     time: Date.now(),
   },
   resinCalcButtons: [-40, -30, -20, -10, 10],
-  characters: [],
-  charactersWeekly: [],
-  charactersGem: [],
-  charactersNormalBoss: [],
-  weapons: [],
-  artifacts: [],
-  domainFilter: "efficiency",
-  domainFilterType: "all",
-  domainFilterRegion: "all",
-  itemNotes: {},
-  itemHighlights: [],
-  tasks: [],
-  taskQuery: "",
-  taskListCompact: false,
-  taskListShowHidden: false,
-  taskListShowDone: false,
-  customizeQuery: "",
-  iconQuery: "",
-  iconListScroll: 0,
-  mapState: {
-    ...defaultMapCenter,
-    zoom: 5,
-  },
-  mapTaskDefaultZoom: 5.6,
-  mapCreateTask: {
-    id: "temp",
-    name: "Iron Chunk",
-    icon: "Iron Chunk",
-    location: defaultMapCenter,
-    dueTime: 0,
-    refreshTime: 86400000,
-    visible: false,
-    notify: false,
-  },
-  mapFocusedTask: false,
-  mapTaskList: true,
   stats: [],
   statRetention: 28,
 };

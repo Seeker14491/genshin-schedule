@@ -1,7 +1,6 @@
 import React, { memo } from "react";
 import { chakra, HStack, Icon, Select, Stat, StatLabel, StatNumber } from "@chakra-ui/react";
 import { useConfig } from "../../../utils/config";
-import { trackEvent } from "../../../utils/umami";
 import { FormattedMessage, useIntl } from "react-intl";
 import { Divide } from "react-feather";
 
@@ -26,7 +25,6 @@ const ResinEstimateModeSwitch = () => {
             value={value}
             onChange={({ currentTarget: { value } }) => {
               setValue(value as any);
-              trackEvent("resinEstimateMode", value);
             }}
           >
             <option value="time">{formatMessage({ defaultMessage: "Time steps (2h, 4h, 8h…)" })}</option>

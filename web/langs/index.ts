@@ -41,13 +41,3 @@ export const Localizations: Record<Language, any> = {
   "nb-NO": { ...EnUS, ...NbNO },
   ru: { ...EnUS, ...Ru },
 };
-
-export function getTranslatedMessages(id: string) {
-  const results: string[] = [];
-
-  for (const localization of Object.values(Localizations)) {
-    localization[id] && results.push(localization[id]);
-  }
-
-  return results;
-}

@@ -3,7 +3,6 @@ import React, { memo, useRef } from "react";
 import AutoSizeInput from "../../AutoSizeInput";
 import { useConfig } from "../../../utils/config";
 import { useServerTime } from "../../../utils/time";
-import { trackEvent } from "../../../utils/umami";
 
 const CurrencyInput = () => {
   const ref = useRef<HTMLInputElement>(null);
@@ -25,7 +24,6 @@ const CurrencyInput = () => {
       value={roundCurrency(current, rank).toString()}
       onClick={() => {
         ref.current?.select();
-        trackEvent("realmCurrency", "editCurrency");
       }}
       onChange={({ currentTarget: { valueAsNumber } }) => {
         setCurrency({

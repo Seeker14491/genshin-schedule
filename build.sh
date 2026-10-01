@@ -1,7 +1,13 @@
 #!/bin/sh
-# Builds docker images for release.
-touch './.env'
-set -a; . './.env'; set +a
+# Builds docker images for release. Build arguments are read from .env if it exists.
+set -e
+cd "$(dirname "$0")"
 
-docker build sync -t 'genshin-sync'
-docker build web -t 'genshin-web' --build-arg NEXT_PUBLIC_UMAMI_URL --build-arg NEXT_PUBLIC_API_PUBLIC --build-arg NEXT_PUBLIC_API_INTERNAL
+if [ -f .env ]; then
+  set -a
+  . ./.env
+  set +a
+fi
+
+docker build -f sync/Dockerfile -t genshin-sync .
+docker build -f web/Dockerfile -t genshin-web --build-arg NEXT_PUBLIC_API_PUBLIC --build-arg NEXT_PUBLIC_API_INTERNAL .

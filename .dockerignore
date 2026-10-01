@@ -1,6 +1,10 @@
-/web/node_modules
-/web/build
-/web/.next
+**/node_modules
+**/.next
+**/*.tsbuildinfo
+**/.env*
 
-/sync/bin
-/sync/obj
+sync/bin
+sync/obj
+
+.git
+images

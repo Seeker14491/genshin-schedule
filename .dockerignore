@@ -1,7 +1,14 @@
+._*
+.env
 **/node_modules
-**/.next
-**/*.tsbuildinfo
 **/.env*
+
+web/build
+web/.svelte-kit
+web/src/lib/paraglide
+web/test-results
+web/playwright-report
+web/screenshots
 
 sync/bin
 sync/obj

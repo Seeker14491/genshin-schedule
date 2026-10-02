@@ -10,4 +10,4 @@ if [ -f .env ]; then
 fi
 
 docker build -f sync/Dockerfile -t genshin-sync .
-docker build -f web/Dockerfile -t genshin-web --build-arg NEXT_PUBLIC_API_PUBLIC --build-arg NEXT_PUBLIC_API_INTERNAL .
+docker build -f web/Dockerfile -t genshin-web --build-arg PUBLIC_API_URL .

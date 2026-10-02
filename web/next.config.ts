@@ -6,6 +6,7 @@ const nextConfig: NextConfig = {
   experimental: {
     optimizePackageImports: ["@chakra-ui/react"],
   },
+  allowedDevOrigins: ['*.trycloudflare.com'],
 };
 
 export default nextConfig;

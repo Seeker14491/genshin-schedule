@@ -1,74 +1,86 @@
 # genshin-web
 
-The website, built with [Next.js](https://nextjs.org/) (App Router), [React](https://react.dev/) and [Chakra UI](https://chakra-ui.com/).
+The website, built with [SvelteKit](https://svelte.dev/docs/kit) and [Tailwind CSS](https://tailwindcss.com/), translated with [Paraglide](https://paraglidejs.com/).
+
+It is a single-page app: the build is plain HTML, JavaScript and CSS files, and everything runs in the browser. Signed-in users' data comes from the [sync](../sync) server's API, and everyone else's is stored in the browser.
 
 ### Prerequisites
 
-- [Node.js 22+](https://nodejs.org/) (24 recommended)
+- [Node.js 22.17+](https://nodejs.org/) (24 recommended)
 
 ## Local development
 
-To start a local development instance at: http://localhost:3000
+To start a local development instance at: http://localhost:5173
 
 ```shell
 # Install dependencies
 npm install
 
-# Start next.js dev server
+# Start the development server
 npm run dev
 ```
 
-Unless `NEXT_PUBLIC_API_PUBLIC` is configured, the official API is used, so you do not need to run PostgreSQL and `sync` locally. To use a local `sync` server instead, create `.env.local`:
+Unless `PUBLIC_API_URL` is configured, the official API is used, so you do not need to run PostgreSQL and `sync` locally. To use a local `sync` server instead, create `.env.local`:
 
 ```shell
-NEXT_PUBLIC_API_PUBLIC=http://localhost:5000/api/v1
+PUBLIC_API_URL=http://localhost:5000/api/v1
 ```
+
+To try the site without real accounts, run `npm run fake-api` and use `PUBLIC_API_URL=http://localhost:5555/api/v1`. The fake API accepts any username and password, except the password `wrong`.
 
 ## Checks
 
 ```shell
-npm run lint       # ESLint
-npm run typecheck  # TypeScript
+npm run lint       # Prettier and ESLint
+npm run check      # TypeScript and Svelte
 npm test           # unit tests (Vitest)
+npm run test:e2e   # behavior tests in a browser (Playwright), against a fake API
 npm run format     # format code with Prettier
 ```
 
-## Production build
+Before running the behavior tests for the first time, install the browser with `npx playwright install chromium`.
 
-To start a production instance at: http://0.0.0.0:3000
+## Production build
 
 ```shell
 npm ci
 npm run build
-npm start
 ```
 
-Pages are rendered on the server for each request, so the site cannot be served by a static file server.
+This writes the site to `build`. Any static file server can serve it, as long as paths that aren't files are answered with `build/200.html`, which starts the app.
 
-Refer to the [Dockerfile](Dockerfile), which is the production build script. Its build context is the repository root.
+Refer to the [Dockerfile](Dockerfile), which is the production build script and serves the site with nginx ([nginx.conf](nginx.conf)) on port 3000. Its build context is the repository root.
 
 ## Environment variables
 
 Compile-time variables (they are embedded into the build, so changing them requires rebuilding):
 
-- (optional) `NEXT_PUBLIC_API_PUBLIC` URL of the `sync` server that is accessible from the internet.
-- (optional) `NEXT_PUBLIC_API_INTERNAL` URL of the `sync` server that is accessible within the local network. This can be useful when running on Docker because requests will be handled faster. e.g. if the API service is named `genshin-sync`, set as `http://genshin-sync:80/api/v1`. Falls back to `NEXT_PUBLIC_API_PUBLIC` when not specified.
+- (optional) `PUBLIC_API_URL` URL of the `sync` server's API. Defaults to the official server, `https://genshin-schedule-sync.caprover.seekr.pw/api/v1`.
 
 ## Project structure
 
-- [app](app) Pages and layouts. Pages under `(app)` require signing in or continuing without signing in.
-- [components](components) React components. Most use [Chakra UI](https://chakra-ui.com/docs/components/concepts/overview) for layout and styling.
-- [utils](utils) The API client, the user's settings (`config.ts`) and how they are synchronized (`sync.ts`), and time calculations.
-- [db](db) Game data, such as the resin cap.
-- [langs](langs) Translations. See its [README](langs/README.md).
-- [assets](assets) Images and fonts.
+- [src/routes](src/routes) Pages. Pages under `(app)` require signing in or continuing without signing in.
+- [src/lib/components](src/lib/components) Svelte components. [ui](src/lib/components/ui) has the basic building blocks, such as buttons and dialogs.
+- [src/lib/session.svelte.ts](src/lib/session.svelte.ts) The user's settings (`config`), and loading and synchronizing them.
+- [src/lib/utils](src/lib/utils) The API client, the settings' format, synchronization with the server, and time calculations.
+- [src/lib/db](src/lib/db) Game data, such as the resin cap.
+- [src/app.css](src/app.css) Colors, text sizes and other design tokens. They match the Chakra UI theme the site was originally built with.
+- [messages](messages) Translations. See its [README](messages/README.md).
+- [src/lib/assets](src/lib/assets) Images and fonts.
+- [scripts](scripts) The fake API, the glossary download, and the screenshot comparison.
 
 ## Updating for new game versions
 
-- Resin cap and recharge rate: [db/resins.ts](db/resins.ts)
-- Realm currency caps and rates: [db/realms.ts](db/realms.ts)
-- Server time zones and reset time: [utils/time.ts](utils/time.ts)
+- Resin cap and recharge rate: [src/lib/db/resins.ts](src/lib/db/resins.ts)
+- Realm currency caps and rates: [src/lib/db/realms.ts](src/lib/db/realms.ts)
+- Server time zones and reset time: [src/lib/utils/time.ts](src/lib/utils/time.ts)
 
-## Translations
+## Comparing screenshots
 
-Message IDs are generated at compile time by [babel-plugin-formatjs](https://formatjs.github.io/docs/tooling/babel-plugin), which Next.js runs through Babel automatically because of [babel.config.js](babel.config.js). It is pinned to version 11, the last version compatible with the Babel 7 bundled in Next.js.
+[scripts/screenshots.mjs](scripts/screenshots.mjs) takes screenshots of the same pages on two builds of the site, e.g. before and after a change to the design, and highlights the differences. Build both against the fake API, serve them, and run:
+
+```shell
+npm run screenshots -- --old http://localhost:3001 --new http://localhost:4173
+```
+
+The images are written to `screenshots`.

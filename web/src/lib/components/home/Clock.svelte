@@ -61,6 +61,6 @@
 
   <dd class="text-style-xs text-fg-muted">
     {weekday}, {m.until_reset({ duration: formatDurationPart(locale.current, resetDue, getLargestUnit(resetDue)) })}
-    (+{m.resin_count({ value: roundResin(getResinRecharge(resetDue.valueOf())) })})
+    ({m.resin_gain({ value: roundResin(getResinRecharge(resetDue.valueOf())) })})
   </dd>
 </dl>

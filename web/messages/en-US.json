@@ -70,18 +70,18 @@
   "resin_calculator": "Resin calculator",
   "resin_calculator_buttons": "Resin calculator buttons",
   "resin_calculator_title": "Resin Calculator",
-  "resin_count": [
+  "resin_estimation_mode": "Resin estimation mode",
+  "resin_full": "Your resins are full.",
+  "resin_gain": [
     {
       "declarations": ["input value", "local valuePlural = value: plural"],
       "selectors": ["valuePlural"],
       "match": {
-        "valuePlural=one": "{value} resin",
-        "valuePlural=*": "{value} resins"
+        "valuePlural=one": "+{value} resin",
+        "valuePlural=*": "+{value} resins"
       }
     }
   ],
-  "resin_estimation_mode": "Resin estimation mode",
-  "resin_full": "Your resins are full.",
   "retry": "Retry",
   "server_america": "America",
   "server_asia": "Asia",

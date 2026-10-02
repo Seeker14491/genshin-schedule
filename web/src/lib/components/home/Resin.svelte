@@ -155,7 +155,7 @@
         <span class="self-start bg-highlight">{m.resin_full()}</span>
       {:else}
         <div>
-          {#each config.resinEstimateMode === "value" ? estimatesByValue : estimatesByTime as { duration, value } (value)}
+          {#each config.resinEstimateMode === "value" ? estimatesByValue : estimatesByTime as { duration, value }, i (i)}
             <div>{m.value_in_duration({ value, duration })}</div>
           {/each}
         </div>

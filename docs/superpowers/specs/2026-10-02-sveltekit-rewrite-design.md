@@ -77,7 +77,7 @@ The backend endpoints that only the removed features used (`GET notifications`, 
 2. **Login check.** The root layout reads the `token` cookie:
    - No cookie on a page that requires it → go to `/`.
    - `token` is `"null"` (continued without signing in) → build the config from `localStorage` synchronously and render.
-   - Any other `token` → show the loading bar and render only the header and footer frame until `GET sync` returns, then render the page and start sync. A `401` response signs the user out (same as `/sign-out`). Other errors show an error message with a retry button.
+   - Any other `token` → load the data with `GET sync` before rendering, then render the page and start sync. Until then, the page only shows the loading bar, which `app.html` draws before the app's code has even loaded; rendering the header and footer first would make the page jump when the content appears. A `401` response signs the user out (same as `/sign-out`). Other errors show an error message with a retry button.
 3. **Sign-out** happens entirely in the browser: delete the cookie, then go to `/`.
 
 ## Data and compatibility

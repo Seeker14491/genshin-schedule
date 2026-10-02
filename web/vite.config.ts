@@ -24,8 +24,14 @@ export default defineConfig({
     }),
   ],
   server: {
+    // Vite listens on localhost, which can resolve to IPv6 (::1) only. Windows only forwards localhost to WSL over
+    // IPv4, so listen there instead to make the site reachable from a Windows browser
+    host: "127.0.0.1",
     // allows sharing the dev server through temporary Cloudflare tunnels
     allowedHosts: [".trycloudflare.com"],
+  },
+  preview: {
+    host: "127.0.0.1",
   },
   test: {
     expect: { requireAssertions: true },

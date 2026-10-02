@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import NextLink from "next/link";
-import { Box, Button, ButtonGroup, chakra, HStack, Link, Spacer, Stack, StackSeparator } from "@chakra-ui/react";
+import { Box, Button, ButtonGroup, ButtonProps, chakra, HStack, Link, Stack, StackSeparator } from "@chakra-ui/react";
 import { FormattedMessage, useIntl } from "react-intl";
 import { BellIcon } from "lucide-react";
 import { DateTime, Duration } from "luxon";
@@ -35,7 +35,11 @@ const Resin = () => {
       <ResinNotification />
 
       <Panel>
-        <HStack gap={2}>
+        {/*
+          phones: the icon and buttons share the first row, and the counter gets a row of its own below them.
+          wider screens: everything is on one row; wrap-reverse makes the buttons wrap above the counter if they don't fit
+        */}
+        <HStack gap={2} flexWrap={{ base: "wrap", sm: "wrap-reverse" }}>
           <chakra.img
             alt="Resin"
             title={formatMessage({ defaultMessage: "Switch estimation mode" })}
@@ -51,38 +55,41 @@ const Resin = () => {
             }}
           />
 
-          <AutoSizeInput
-            min={0}
-            max={ResinCap}
-            fontSize="xl"
-            fontWeight="bold"
-            aria-label={formatMessage({ defaultMessage: "Resin" })}
-            value={roundResin(current)}
-            onChange={({ currentTarget: { valueAsNumber } }) => {
-              const oldValue = roundResin(current);
-              const newValue = roundResin(valueAsNumber || 0);
+          <HStack gap={2} order={{ base: 1, sm: 0 }} w={{ base: "full", sm: "auto" }}>
+            <AutoSizeInput
+              min={0}
+              max={ResinCap}
+              fontSize="xl"
+              fontWeight="bold"
+              aria-label={formatMessage({ defaultMessage: "Resin" })}
+              value={roundResin(current)}
+              onChange={({ currentTarget: { valueAsNumber } }) => {
+                const oldValue = roundResin(current);
+                const newValue = roundResin(valueAsNumber || 0);
 
-              setResin({
-                value: newValue,
-                time: time.valueOf(),
-              });
+                setResin({
+                  value: newValue,
+                  time: time.valueOf(),
+                });
 
-              setStats((stats) => ({ ...stats, resinsSpent: roundResin(stats.resinsSpent - newValue + oldValue) }));
-            }}
-          />
+                setStats((stats) => ({ ...stats, resinsSpent: roundResin(stats.resinsSpent - newValue + oldValue) }));
+              }}
+            />
 
-          <Box flexShrink={0} fontSize="sm" color="gray.500">
-            / {ResinCap}
+            <Box flexShrink={0} fontSize="sm" color="gray.500">
+              / {ResinCap}
+            </Box>
+          </HStack>
+
+          <Box ml="auto">
+            <HoverReveal>
+              <SideButtons current={current} />
+            </HoverReveal>
           </Box>
-
-          <Spacer />
-
-          <HoverReveal>
-            <SideButtons current={current} />
-          </HoverReveal>
         </HStack>
 
-        <Stack gap={2} color="gray.500" pl={12} fontSize="sm" separator={<StackSeparator />}>
+        {/* indented to line up with the counter, which is only next to the icon on wider screens */}
+        <Stack gap={2} color="gray.500" pl={{ base: 0, sm: 12 }} fontSize="sm" separator={<StackSeparator />}>
           {current >= ResinCap ? (
             <chakra.span bg={{ base: "yellow.100", _dark: "yellow.900" }} alignSelf="start">
               <FormattedMessage defaultMessage="Your resins are full." />
@@ -94,7 +101,7 @@ const Resin = () => {
           )}
 
           {notifyMark !== ResinCap && current < notifyMark && (
-            <HStack gap={1} ml={-4}>
+            <HStack gap={1} ml={{ base: 0, sm: -4 }}>
               <BellIcon size="0.75em" />
 
               <Link asChild>
@@ -117,38 +124,44 @@ const SideButtons = ({ current }: { current: number }) => {
   const [buttons] = useConfig("resinCalcButtons");
   const [, setStats] = useCurrentStats();
 
+  // unavailable buttons must be left out rather than rendered as null,
+  // because the group counts its children to find the first and last button
+  const available = buttons.filter((delta) => {
+    // round down without clamping, because we need to check for extremities
+    const rounded = Math.floor(current + delta);
+
+    // if addition, don't overflow; if subtraction, don't underflow
+    return (delta < 0 && rounded >= 0) || (delta > 0 && rounded <= ResinCap);
+  });
+
   return (
     <ButtonGroup attached size="sm" variant="subtle">
-      {buttons.map((delta) => {
-        // round down without clamping, because we need to check for extremities
-        const rounded = Math.floor(current + delta);
+      {available.map((delta) => (
+        <SideButton
+          key={delta}
+          value={delta}
+          onClick={() => {
+            setResin((resin) => ({
+              value: clampResin(clampResin(resin.value + getResinRecharge(time.valueOf() - resin.time)) + delta),
+              time: time.valueOf(),
+            }));
 
-        // if addition, don't overflow; if subtraction, don't underflow
-        const available = (delta < 0 && rounded >= 0) || (delta > 0 && rounded <= ResinCap);
-
-        return (
-          <SideButton
-            key={delta}
-            value={delta}
-            available={available}
-            onClick={() => {
-              setResin((resin) => ({
-                value: clampResin(clampResin(resin.value + getResinRecharge(time.valueOf() - resin.time)) + delta),
-                time: time.valueOf(),
-              }));
-
-              if (delta < 0) {
-                setStats((stats) => ({ ...stats, resinsSpent: stats.resinsSpent - delta }));
-              }
-            }}
-          />
-        );
-      })}
+            if (delta < 0) {
+              setStats((stats) => ({ ...stats, resinsSpent: stats.resinsSpent - delta }));
+            }
+          }}
+        />
+      ))}
     </ButtonGroup>
   );
 };
 
-const SideButton = ({ value, available, onClick }: { value: number; available: boolean; onClick: () => void }) => {
+/** Other props are passed to the button, because the attached group styles its buttons through injected props. */
+const SideButton = ({
+  value,
+  onClick,
+  ...props
+}: { value: number; onClick: () => void } & Omit<ButtonProps, "value" | "onClick">) => {
   const { formatMessage } = useIntl();
 
   // two-digit multiples of ten get a shortcut: the first digit subtracts, shift + the first digit adds.
@@ -158,15 +171,12 @@ const SideButton = ({ value, available, onClick }: { value: number; available: b
   useHotkey(
     (e) => (e.code === `Digit${digit}` || e.code === `Numpad${digit}`) && e.shiftKey === value > 0,
     onClick,
-    available && digit !== undefined,
+    digit !== undefined,
   );
-
-  if (!available) {
-    return null;
-  }
 
   return (
     <Button
+      {...props}
       color="gray.500"
       px={2}
       onClick={onClick}

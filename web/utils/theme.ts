@@ -31,11 +31,13 @@ export const system = createSystem(
             muted: { value: { _light: "{colors.gray.100}", _dark: "#2d3748" } },
             emphasized: { value: { _light: "{colors.gray.200}", _dark: "#4a5568" } },
           },
-          // used by gray buttons and badges, e.g. variant="subtle"
+          // used by gray buttons and badges, e.g. variant="subtle".
+          // the dark values are the original buttons' whiteAlpha.200/300/400 over the #171923 background,
+          // made opaque so that attached buttons, which overlap by 1px, don't show a brighter seam
           gray: {
-            subtle: { value: { _light: "{colors.gray.100}", _dark: "#2d3748" } },
-            muted: { value: { _light: "{colors.gray.200}", _dark: "#4a5568" } },
-            emphasized: { value: { _light: "{colors.gray.300}", _dark: "#718096" } },
+            subtle: { value: { _light: "{colors.gray.100}", _dark: "#2a2b35" } },
+            muted: { value: { _light: "{colors.gray.200}", _dark: "#3c3e46" } },
+            emphasized: { value: { _light: "{colors.gray.300}", _dark: "#4f5058" } },
           },
           fg: {
             DEFAULT: { value: { _light: "#1a202c", _dark: "rgba(255, 255, 255, 0.92)" } },

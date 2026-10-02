@@ -1,0 +1,279 @@
+@import "tailwindcss";
+@import "./lib/assets/fonts/inter/inter.css";
+
+/* the site's theme is chosen in settings and applied as a class on <html> (see app.html) */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/*
+ * Design tokens. The site was originally built with Chakra UI v3, so these are Chakra's values
+ * (with the site's own overrides) to keep the look the same.
+ */
+@theme {
+  --breakpoint-*: initial;
+  --breakpoint-sm: 480px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 1024px;
+  --breakpoint-xl: 1280px;
+  --breakpoint-2xl: 1536px;
+
+  --font-sans:
+    "Inter", "Inter Fallback", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif,
+    "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+  --font-heading:
+    "Genshin", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji",
+    "Segoe UI Emoji", "Segoe UI Symbol";
+  --font-mono: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+
+  /* font sizes don't set a line height, which is inherited (1.5) unless set explicitly with leading-* */
+  --text-*: initial;
+  --text-2xs: 10px;
+  --text-xs: 10px;
+  --text-sm: 12px;
+  --text-md: 14px;
+  --text-lg: 16px;
+  --text-xl: 18px;
+  --text-2xl: 1.5rem;
+  --text-3xl: 1.875rem;
+  --text-4xl: 2.25rem;
+
+  --color-*: initial;
+  --color-white: #ffffff;
+  --color-black: #09090b;
+
+  --color-gray-50: #fafafa;
+  --color-gray-100: #f4f4f5;
+  --color-gray-200: #e4e4e7;
+  --color-gray-300: #d4d4d8;
+  --color-gray-400: #a1a1aa;
+  --color-gray-500: #71717a;
+  --color-gray-600: #52525b;
+  --color-gray-700: #3f3f46;
+  --color-gray-800: #27272a;
+  --color-gray-900: #18181b;
+  --color-gray-950: #111111;
+
+  --color-blue-300: #a3cfff;
+  --color-blue-500: #3b82f6;
+  --color-blue-600: #2563eb;
+
+  --color-red-100: #fee2e2;
+  --color-red-300: #fca5a5;
+  --color-red-600: #dc2626;
+  --color-red-700: #991919;
+  --color-red-900: #300c0c;
+
+  --color-orange-100: #ffedd5;
+  --color-orange-300: #fdba74;
+  --color-orange-700: #92310a;
+  --color-orange-900: #3b1106;
+
+  --color-pink-300: #f9a8d4;
+  --color-pink-500: #ec4899;
+
+  --color-yellow-100: #fef9c3;
+  --color-yellow-900: #422006;
+
+  --color-discord: #7289da;
+  --color-discord-hover: #677bc4;
+
+  /* semantic colors; dark mode values are below. The site keeps its original colors rather than Chakra's black dark mode */
+  --color-bg: var(--color-white);
+  --color-bg-subtle: var(--color-gray-50);
+  --color-bg-muted: var(--color-gray-100);
+  --color-bg-emphasized: var(--color-gray-200);
+  --color-bg-inverted: var(--color-black);
+  --color-fg: #1a202c;
+  --color-fg-muted: var(--color-gray-600);
+  --color-fg-subtle: var(--color-gray-400);
+  --color-fg-inverted: var(--color-gray-50);
+  --color-border: var(--color-gray-200);
+  --color-fg-error: #ef4444;
+
+  /* gray buttons, links and badges */
+  --color-gray-fg: var(--color-gray-800);
+  --color-gray-subtle: var(--color-gray-100);
+  --color-gray-muted: var(--color-gray-200);
+  --color-gray-emphasized: var(--color-gray-300);
+  --color-gray-focus-ring: var(--color-gray-400);
+
+  /* colored buttons, alerts and toasts */
+  --color-blue-solid: var(--color-blue-600);
+  --color-blue-focus-ring: var(--color-blue-500);
+  --color-red-solid: var(--color-red-600);
+  --color-red-fg: var(--color-red-700);
+  --color-red-subtle: var(--color-red-100);
+  --color-orange-fg: var(--color-orange-700);
+  --color-orange-subtle: var(--color-orange-100);
+
+  /* link colors used across the site */
+  --color-link-pink: var(--color-pink-500);
+  --color-link-blue: var(--color-blue-500);
+  --color-highlight: var(--color-yellow-100);
+
+  --shadow-sm: 0px 2px 4px rgb(24 24 27 / 0.1), 0px 0px 1px rgb(24 24 27 / 0.3);
+  --shadow-md: 0px 4px 8px rgb(24 24 27 / 0.1), 0px 0px 1px rgb(24 24 27 / 0.3);
+  --shadow-lg: 0px 8px 16px rgb(24 24 27 / 0.1), 0px 0px 1px rgb(24 24 27 / 0.3);
+  --shadow-xl: 0px 16px 24px rgb(24 24 27 / 0.1), 0px 0px 1px rgb(24 24 27 / 0.3);
+  --shadow-inset: inset 0 0 0 1px rgb(9 9 11 / 0.05);
+
+  --animate-progress: progress 1.2s ease-in-out infinite;
+
+  @keyframes progress {
+    from {
+      transform: translateX(-100%);
+    }
+    to {
+      transform: translateX(250%);
+    }
+  }
+}
+
+@layer base {
+  .dark {
+    --color-bg: #171923;
+    --color-bg-subtle: #1a202c;
+    --color-bg-muted: #2d3748;
+    --color-bg-emphasized: #4a5568;
+    --color-bg-inverted: var(--color-white);
+    --color-fg: rgba(255, 255, 255, 0.92);
+    --color-fg-muted: var(--color-gray-400);
+    --color-fg-subtle: var(--color-gray-500);
+    --color-fg-inverted: var(--color-black);
+    --color-border: #2d3748;
+    --color-fg-error: #f87171;
+
+    /* the original buttons' whiteAlpha.200/300/400 over the #171923 background, made opaque so that attached
+       buttons, which overlap by 1px, don't show a brighter seam */
+    --color-gray-fg: var(--color-gray-200);
+    --color-gray-subtle: #2a2b35;
+    --color-gray-muted: #3c3e46;
+    --color-gray-emphasized: #4f5058;
+
+    --color-red-fg: var(--color-red-300);
+    --color-red-subtle: var(--color-red-900);
+    --color-orange-fg: var(--color-orange-300);
+    --color-orange-subtle: var(--color-orange-900);
+
+    --color-link-pink: var(--color-pink-300);
+    --color-link-blue: var(--color-blue-300);
+    --color-highlight: var(--color-yellow-900);
+
+    --shadow-sm: 0px 2px 4px rgb(9 9 11 / 0.64), 0px 0px 1px inset rgb(212 212 216 / 0.3);
+    --shadow-md: 0px 4px 8px rgb(9 9 11 / 0.64), 0px 0px 1px inset rgb(212 212 216 / 0.3);
+    --shadow-lg: 0px 8px 16px rgb(9 9 11 / 0.64), 0px 0px 1px inset rgb(212 212 216 / 0.3);
+    --shadow-xl: 0px 16px 24px rgb(9 9 11 / 0.64), 0px 0px 1px inset rgb(212 212 216 / 0.3);
+    --shadow-inset: inset 0 0 0 1px rgb(212 212 216 / 0.05);
+  }
+
+  @font-face {
+    font-family: "Genshin";
+    src: url("./lib/assets/fonts/Genshin.woff2") format("woff2");
+    font-display: swap;
+  }
+
+  *,
+  ::before,
+  ::after,
+  ::backdrop {
+    border-color: var(--color-border);
+    font-feature-settings: "cv11";
+  }
+
+  html {
+    color: var(--color-fg);
+    background-color: var(--color-bg);
+    line-height: 1.5;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    font-size: var(--text-md);
+  }
+
+  ::placeholder {
+    color: color-mix(in srgb, var(--color-fg-muted) 80%, transparent);
+  }
+
+  ::selection {
+    background-color: color-mix(in srgb, var(--color-gray-emphasized) 80%, transparent);
+  }
+
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+}
+
+/* keyboard focus outline used by links, buttons and other controls */
+@utility focus-ring {
+  &:focus-visible {
+    outline: 2px solid var(--focus-ring-color, var(--color-gray-focus-ring));
+    outline-offset: 2px;
+  }
+}
+
+/* text sizes with the line heights Chakra's text styles use */
+@utility text-style-xs {
+  font-size: var(--text-xs);
+  line-height: 1rem;
+}
+
+@utility text-style-sm {
+  font-size: var(--text-sm);
+  line-height: 1.25rem;
+}
+
+@utility text-style-md {
+  font-size: var(--text-md);
+  line-height: 1.5rem;
+}
+
+@utility text-style-lg {
+  font-size: var(--text-lg);
+  line-height: 1.75rem;
+}
+
+@utility text-style-xl {
+  font-size: var(--text-xl);
+  line-height: 1.875rem;
+}
+
+@utility text-style-2xl {
+  font-size: var(--text-2xl);
+  line-height: 2rem;
+}
+
+@utility text-style-3xl {
+  font-size: var(--text-3xl);
+  line-height: 2.375rem;
+}
+
+@utility text-style-4xl {
+  font-size: var(--text-4xl);
+  line-height: 2.75rem;
+  letter-spacing: -0.025em;
+}
+
+/* plain link: colored text that is underlined on hover */
+@utility link {
+  display: inline-flex;
+  align-items: center;
+  gap: --spacing(1.5);
+  border-radius: var(--radius-xs);
+  color: var(--link-color, var(--color-gray-fg));
+  cursor: pointer;
+  outline: none;
+
+  &:hover {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    text-decoration-color: color-mix(in srgb, currentColor 20%, transparent);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-gray-focus-ring);
+    outline-offset: 2px;
+  }
+}

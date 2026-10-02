@@ -1,19 +1,24 @@
-# dependencies
-/node_modules
+node_modules
 
-# next.js
-/.next/
-/out/
-next-env.d.ts
-*.tsbuildinfo
+# build output
+/.svelte-kit
+/build
+
+# Paraglide output
+/src/lib/paraglide
+/project.inlang/cache/
+
+# Playwright
+/test-results
+/playwright-report
+/screenshots
+
+# env files
+.env
+.env.*
+!.env.example
 
 # misc
 .DS_Store
-*.pem
-.idea
-
-# debug
-npm-debug.log*
-
-# local env files
-.env*.local
+Thumbs.db
+vite.config.ts.timestamp-*

@@ -131,7 +131,7 @@ Same behavior as `utils/notifications.ts` and `ResinNotification` today:
 - The desired notification is: key `resin`, time when resin reaches `resinNotifyMark`, title "Resin recharged", description "Your resins have fully recharged!" when the threshold is the cap, otherwise "You have {value} resins right now!", URL `/home`, color `#63b3ed`. Text is in the user's current language, and the URL is made absolute.
 - When resin is already at or above the threshold, the desired notification is "none".
 - The server is updated 1 second after the desired notification **changes**: `PUT` for a notification, `DELETE` for none. Opening a page never sends anything by itself. The pending update survives page navigation.
-- **Changed:** the icon uses a fixed URL, `/resin.png` (in `static/`), instead of a hashed build file. Today, notifications queued before a deploy point to an icon that no longer exists.
+- **Changed:** the icon uses a fixed URL, `/resin.webp` (in `static/`, the same WebP image Discord was already sent), instead of a hashed build file. Today, notifications queued before a deploy point to an icon that no longer exists.
 
 ### Time
 
@@ -173,7 +173,7 @@ Feature components live in `src/lib/components/` (header, footer, clock, resin, 
 
 ### Static files
 
-`static/` holds the favicons, `site.webmanifest`, `browserconfig.xml`, `robots.txt`, `sw.js` and `resin.png`. Images used by components (game icons, backgrounds, setup screenshots, welcome screenshot) are imported from `src/lib/assets/` so that they get hashed file names.
+`static/` holds the favicons, `site.webmanifest`, `browserconfig.xml`, `robots.txt`, `sw.js` and `resin.webp`. Images used by components (game icons, backgrounds, setup screenshots, welcome screenshot) are imported from `src/lib/assets/` so that they get hashed file names.
 
 ## Translations
 

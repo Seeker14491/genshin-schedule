@@ -163,6 +163,18 @@ describe("ConfigSync", () => {
     expect(server.data.realmRank).toBe(3);
   });
 
+  it("keeps data the site no longer uses, such as statistics", async () => {
+    const stats = [{ id: "2024-01-01", time: 0, resinsSpent: 160 }];
+    const server = new FakeServer({ ...defaults, stats, statRetention: 28 } as Partial<Config>);
+    const { store } = setup(server);
+
+    store.set((c) => ({ ...c, theme: "dark" }));
+    await vi.advanceTimersByTimeAsync(200);
+
+    expect(server.requests[0].patch).toEqual([{ op: "replace", path: "/theme", value: "dark" }]);
+    expect(server.data).toMatchObject({ stats, statRetention: 28, theme: "dark" });
+  });
+
   it("stops watching the store when stopped", async () => {
     const server = new FakeServer(defaults);
     const { store, stop } = setup(server);

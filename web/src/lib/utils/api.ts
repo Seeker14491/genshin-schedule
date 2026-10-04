@@ -3,8 +3,6 @@ import type { Config } from "./config";
 
 export type User = {
   username: string;
-  createdTime: number;
-  isAdmin: boolean;
   discordUserId?: string | number | null;
 };
 

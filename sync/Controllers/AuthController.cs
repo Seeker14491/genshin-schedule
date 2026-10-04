@@ -70,14 +70,6 @@ public class AuthController(SyncDbContext db, HashHelper hash, AuthHelper auth, 
                 logger.LogInformation("Created user '{Username}'.", request.Username);
 
                 _registrations.Inc();
-
-                // if user id is 1, set as admin
-                if (user.Id == 1)
-                {
-                    user.IsAdmin = true;
-
-                    await db.SaveChangesAsync();
-                }
             }
             else
             {

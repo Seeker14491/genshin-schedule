@@ -6,7 +6,7 @@ Each language has a file here, named after its code (e.g. [en-US.json](en-US.jso
 
 ```json
 {
-  "resin_full": "Your resins are full.",
+  "resin_full": "Your resin is full.",
   "until_reset": "{duration} until reset"
 }
 ```
@@ -31,21 +31,21 @@ Messages are compiled into typed functions, so a misspelled name or a missing pa
 
 Text in `{braces}` is a parameter. Keep parameter names unchanged in translations, but move them wherever the language needs them.
 
-Messages that depend on a number can have plural forms. English uses this for `resin_gain` ("+1 resin" and "+5 resins"):
+Messages that depend on a number can have plural forms, e.g. "1 day left" and "5 days left":
 
 ```json
 {
-  "resin_gain": [
+  "days_left": [
     {
       "declarations": ["input value", "local valuePlural = value: plural"],
       "selectors": ["valuePlural"],
-      "match": { "valuePlural=one": "+{value} resin", "valuePlural=*": "+{value} resins" }
+      "match": { "valuePlural=one": "{value} day left", "valuePlural=*": "{value} days left" }
     }
   ]
 }
 ```
 
-The forms (`one`, `few`, `many`, `*` for everything else) are the [plural categories](https://www.unicode.org/cldr/charts/latest/supplemental/language_plural_rules.html) of each language. Languages that don't need different forms can use a plain message instead.
+The forms (`one`, `few`, `many`, `*` for everything else) are the [plural categories](https://www.unicode.org/cldr/charts/latest/supplemental/language_plural_rules.html) of each language. Languages that don't need different forms can use a plain message instead. In English, "resin" is both singular and plural, as in the game.
 
 Durations such as "2 hours" are translated by the browser, not here.
 

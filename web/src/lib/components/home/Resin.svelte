@@ -1,10 +1,19 @@
 <script lang="ts">
   import { BellIcon } from "@lucide/svelte";
   import { DateTime, Duration } from "luxon";
-  import { clampResin, getResinRecharge, ResinCap, ResinsPerMinute, roundResin } from "#lib/db/resins.ts";
+  import {
+    addResin,
+    getResinAt,
+    ResinCap,
+    ResinMax,
+    ResinPerMinute,
+    roundResin,
+    sortResinButtons,
+  } from "#lib/db/resin.ts";
   import type { Config } from "#lib/utils/config.ts";
+  import { getDigit, onHotkey } from "#lib/utils/hotkeys.svelte.ts";
   import { formatDuration, formatDurationPart, formatTime, getServerTime } from "#lib/utils/time.ts";
-  import { config, updateConfig } from "#lib/session.svelte.ts";
+  import { config } from "#lib/session.svelte.ts";
   import { clock } from "#lib/clock.svelte.ts";
   import { locale } from "#lib/i18n.svelte.ts";
   import { ResinIcon } from "#lib/assets/index.ts";
@@ -18,21 +27,25 @@
 
   const estimateModes: Config["resinEstimateMode"][] = ["time", "value"];
 
-  // resin at a given time. Times before the last change count as the time of the change
-  const resinAt = (ms: number) => config.resin.value + getResinRecharge(Math.max(0, ms - config.resin.time));
+  const resinAt = (ms: number) => getResinAt(config.resin, ms);
 
   const time = $derived(getServerTime(clock.minute, config.server));
-  const current = $derived(resinAt(Math.max(clock.minute, config.resin.time)));
+  const current = $derived(resinAt(clock.minute));
 
-  // buttons that would go below 0 or above the cap are left out
+  // from lowest to highest, even if saved in another order. Buttons that would go below 0 or above the maximum are left out
   const buttons = $derived(
-    config.resinCalcButtons.filter((delta) => {
-      // round down without clamping, because we need to check for extremities
-      const rounded = Math.floor(current + delta);
+    sortResinButtons(config.resinCalcButtons).filter((delta) => addResin(current, delta) !== undefined),
+  );
 
-      // if addition, don't overflow; if subtraction, don't underflow
-      return (delta < 0 && rounded >= 0) || (delta > 0 && rounded <= ResinCap);
-    }),
+  // 1-9 subtract 10-90 resin, and add it while holding shift, whichever buttons there are.
+  // They only work while the resin calculator is open, so that resin doesn't change without the user seeing it
+  onHotkey(
+    (e) => getDigit(e) !== undefined,
+    (e) => {
+      const amount = getDigit(e)! * 10;
+      changeResin(e.shiftKey ? amount : -amount);
+    },
+    () => !config.hiddenWidgets.resin,
   );
 
   /** How much resin there will be after some time: 2 hours, then every 4 hours up to 24, then when full. */
@@ -40,12 +53,12 @@
     const result: { duration: string; value: number }[] = [];
 
     const addValue = (hours: number) => {
-      const resins = roundResin(resinAt(time.plus({ hours }).valueOf()));
+      const value = roundResin(resinAt(time.plus({ hours }).valueOf()));
 
-      if (resins < ResinCap) {
+      if (value < ResinCap) {
         result.push({
           duration: formatDurationPart(locale.current, Duration.fromObject({ hours }), "hour"),
-          value: resins,
+          value,
         });
         return true;
       }
@@ -55,7 +68,7 @@
     for (let i = 4; addValue(i) && i < 24; i += 4);
 
     const capTime = DateTime.fromMillis(config.resin.time)
-      .plus({ minutes: (ResinCap - config.resin.value) / ResinsPerMinute })
+      .plus({ minutes: (ResinCap - config.resin.value) / ResinPerMinute })
       .diff(time);
 
     result.push({
@@ -82,18 +95,19 @@
   });
 
   // e.g. "1 hour 20 minutes (04:05)"
-  function estimateTime(remainingResins: number) {
-    const remaining = Duration.fromObject({ minutes: remainingResins / ResinsPerMinute });
+  function estimateTime(amount: number) {
+    const remaining = Duration.fromObject({ minutes: amount / ResinPerMinute });
     return `${formatDuration(locale.current, remaining, ["hour", "minute"])} (${formatTime(time.plus(remaining), ["hour", "minute"])})`;
   }
 
-  function addResin(delta: number) {
+  /** Adds resin (or subtracts it, if `delta` is negative), unless that would go below 0 or above the maximum. */
+  function changeResin(delta: number) {
     const now = Date.now();
+    const value = addResin(resinAt(now), delta);
 
-    updateConfig("resin", (resin) => ({
-      value: clampResin(clampResin(resin.value + getResinRecharge(Math.max(0, now - resin.time))) + delta),
-      time: now,
-    }));
+    if (value !== undefined) {
+      config.resin = { value, time: now };
+    }
   }
 </script>
 
@@ -123,7 +137,7 @@
       <div class="order-1 flex w-full items-center gap-2 sm:order-none sm:w-auto">
         <AutoSizeInput
           min={0}
-          max={ResinCap}
+          max={ResinMax}
           class="text-xl font-bold"
           aria-label={m.resin()}
           value={roundResin(current)}
@@ -140,7 +154,7 @@
             class="inline-flex items-center [&>*:not(:first-child)]:rounded-s-none [&>*:not(:last-child)]:-me-px [&>*:not(:last-child)]:rounded-e-none"
           >
             {#each buttons as delta (delta)}
-              <ResinButton {delta} onclick={() => addResin(delta)} />
+              <ResinButton {delta} onclick={() => changeResin(delta)} />
             {/each}
           </div>
         </HoverReveal>

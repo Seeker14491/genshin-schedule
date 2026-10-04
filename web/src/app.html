@@ -17,13 +17,23 @@
 
     <script>
       // applies the saved theme before the page is drawn, so that dark mode users don't see a flash of light mode.
-      // the app keeps "color-mode" up to date (see src/lib/theme.ts)
-      try {
-        const mode = localStorage.getItem("color-mode") === "dark" ? "dark" : "light";
+      // the app keeps "color-mode" up to date (see src/lib/theme.ts). Anything but "light" or "dark" follows the system.
+      // the variables are in a block, so that they don't become globals
+      {
+        let theme = null;
+
+        try {
+          theme = localStorage.getItem("color-mode");
+        } catch {
+          // storage is unavailable
+        }
+
+        const mode =
+          theme === "dark" || (theme !== "light" && matchMedia("(prefers-color-scheme: dark)").matches)
+            ? "dark"
+            : "light";
         document.documentElement.classList.add(mode);
         document.documentElement.style.colorScheme = mode;
-      } catch {
-        // storage is unavailable
       }
     </script>
 

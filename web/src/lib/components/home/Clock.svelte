@@ -1,6 +1,6 @@
 <script lang="ts">
   import { ClockIcon } from "@lucide/svelte";
-  import { getResinRecharge, roundResin } from "#lib/db/resins.ts";
+  import { getResinRecharge, roundResin } from "#lib/db/resin.ts";
   import { ServerList } from "#lib/utils/config.ts";
   import {
     formatDurationPart,

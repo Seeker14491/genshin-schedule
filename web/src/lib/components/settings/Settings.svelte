@@ -1,7 +1,7 @@
 <script lang="ts">
-  import { ApertureIcon, BellIcon, DivideIcon, GlobeIcon, ImageIcon, PercentIcon } from "@lucide/svelte";
+  import { BellIcon, DivideIcon, GlobeIcon, ImageIcon, PercentIcon, SunMoonIcon } from "@lucide/svelte";
   import type { User } from "#lib/utils/api.ts";
-  import { parseResinButtons, ResinCap } from "#lib/db/resins.ts";
+  import { ResinCap } from "#lib/db/resin.ts";
   import { isLanguage, Languages, LanguageNames } from "#lib/languages.ts";
   import type { Config } from "#lib/utils/config.ts";
   import { config } from "#lib/session.svelte.ts";
@@ -11,9 +11,8 @@
   import ManageAccountButton from "./ManageAccountButton.svelte";
   import SignOutButton from "./SignOutButton.svelte";
   import Field from "./Field.svelte";
-  import Switch from "../ui/Switch.svelte";
+  import ResinButtonPicker from "./ResinButtonPicker.svelte";
   import Select from "../ui/Select.svelte";
-  import Slider from "../ui/Slider.svelte";
   import { inputClass } from "../ui/input.ts";
 
   /** Only given for signed-in users. */
@@ -32,18 +31,30 @@
     ["none", m.background_disabled],
   ];
 
-  let resinButtons = $state(config.resinCalcButtons.map((v) => (v > 0 ? `+${v}` : `${v}`)).join(", "));
+  // saves the entered threshold as a whole number from 1 to the cap. The field shows the saved value when it doesn't
+  // match what was entered (e.g. 300 becomes 200), except while it's empty, so that it can be cleared to type another
+  function setNotifyMark(input: HTMLInputElement) {
+    if (Number.isNaN(input.valueAsNumber)) return;
+
+    config.resinNotifyMark = Math.min(ResinCap, Math.max(1, Math.round(input.valueAsNumber)));
+
+    if (input.value !== config.resinNotifyMark.toString()) {
+      input.value = config.resinNotifyMark.toString();
+    }
+  }
 </script>
 
 <div class="flex flex-col gap-4">
   <h1 class="font-heading text-style-xl font-semibold">{m.settings()}</h1>
 
   <div class="flex flex-col items-start gap-4">
-    <Switch bind:checked={() => config.theme === "dark", (dark) => (config.theme = dark ? "dark" : "light")}>
-      {#snippet label()}
-        <span class="flex items-center gap-2"><ApertureIcon size="1em" />{m.dark_mode()}</span>
-      {/snippet}
-    </Switch>
+    <Field id="theme" icon={SunMoonIcon} label={m.theme()}>
+      <Select id="theme" bind:value={() => config.theme, (value) => (config.theme = value as Config["theme"])}>
+        <option value="system">{m.theme_system()}</option>
+        <option value="light">{m.theme_light()}</option>
+        <option value="dark">{m.theme_dark()}</option>
+      </Select>
+    </Field>
 
     <Field id="language" icon={GlobeIcon} label={m.language()}>
       <Select
@@ -83,28 +94,26 @@
       </Select>
     </Field>
 
-    <Field id="resin-buttons" icon={PercentIcon} label={m.resin_calculator_buttons()}>
-      <input
-        id="resin-buttons"
-        class="{inputClass} max-w-xs"
-        bind:value={resinButtons}
-        oninput={() => (config.resinCalcButtons = parseResinButtons(resinButtons))}
-      />
+    <Field id="resin-buttons" icon={PercentIcon} label={m.resin_calculator_buttons()} group>
+      <ResinButtonPicker />
     </Field>
 
-    <!-- keeps the queued notification up to date with the slider -->
+    <!-- keeps the queued notification up to date with the threshold -->
     <ResinNotification />
 
-    <Slider
-      bind:value={() => config.resinNotifyMark, (value) => (config.resinNotifyMark = value)}
-      min={10}
-      max={ResinCap}
-      step={10}
-    >
-      {#snippet label()}
-        <span class="flex items-center gap-2"><BellIcon size="1em" />{m.notification_threshold()}</span>
-      {/snippet}
-    </Slider>
+    <Field id="notification-threshold" icon={BellIcon} label={m.notification_threshold()}>
+      <input
+        id="notification-threshold"
+        type="number"
+        class="{inputClass} max-w-xs"
+        min="1"
+        max={ResinCap}
+        step="1"
+        value={config.resinNotifyMark}
+        oninput={(e) => setNotifyMark(e.currentTarget)}
+        onblur={(e) => (e.currentTarget.value = config.resinNotifyMark.toString())}
+      />
+    </Field>
 
     <div class="flex flex-wrap gap-2">
       <ManageDataButton />

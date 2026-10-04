@@ -1,6 +1,6 @@
 <script lang="ts">
   import { CheckIcon, CodeIcon, CopyIcon, PencilIcon } from "@lucide/svelte";
-  import { getDefaultConfig, validateConfigData } from "#lib/utils/config.ts";
+  import { getDefaultConfig, validateConfigData, withDefaults } from "#lib/utils/config.ts";
   import { store } from "#lib/session.svelte.ts";
   import { m } from "#lib/paraglide/messages.js";
   import Alert from "../ui/Alert.svelte";
@@ -29,7 +29,7 @@
       return;
     }
 
-    store.set({ ...getDefaultConfig(Date.now()), ...result.data });
+    store.set(withDefaults(result.data, getDefaultConfig(Date.now())));
     open = false;
   }
 

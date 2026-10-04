@@ -7,7 +7,6 @@ public class DbUser
     public string? Username { get; set; }
     public byte[]? Password { get; set; }
     public DateTimeOffset CreatedTime { get; set; }
-    public bool IsAdmin { get; set; }
 
     public ulong? DiscordUserId { get; set; }
 

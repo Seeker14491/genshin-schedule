@@ -7,6 +7,7 @@ import {
   getDefaultConfig,
   readLocalConfig,
   type SetConfig,
+  withDefaults,
   writeLocalConfig,
 } from "./utils/config";
 import { ConfigSync } from "./utils/sync";
@@ -93,13 +94,13 @@ async function start(fetchFn: typeof fetch): Promise<void> {
       throw e;
     }
 
-    // the server doesn't store defaults. Keys that aren't part of the config are kept
-    const withDefaults = (data: Partial<Config>) => ({ ...defaults, ...data });
+    // the server doesn't store defaults until the first change. Keys that aren't part of the config are kept
+    const fillDefaults = (data: Partial<Config>) => withDefaults(data, defaults);
 
     session?.stop();
-    store.set(withDefaults(initial.data));
+    store.set(fillDefaults(initial.data));
 
-    const configSync = new ConfigSync(store, initial, withDefaults, createApiClient, (error) => {
+    const configSync = new ConfigSync(store, initial, fillDefaults, createApiClient, (error) => {
       console.error(error);
 
       toaster.error(m.sync_error_title(), m.sync_error_description());

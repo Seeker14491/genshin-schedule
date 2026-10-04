@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getDefaultConfig, readLocalConfig, validateConfigData, writeLocalConfig } from "./config";
+import { getDefaultConfig, readLocalConfig, validateConfigData, withDefaults, writeLocalConfig } from "./config";
 
 /** Browser storage backed by a map. */
 class MemoryStorage implements Storage {
@@ -75,7 +75,43 @@ describe("local config", () => {
     const storage = new MemoryStorage();
     storage.setItem("theme", "dark");
 
-    expect(readLocalConfig(storage, defaults).theme).toBe("light");
+    expect(readLocalConfig(storage, defaults).theme).toBe(defaults.theme);
+  });
+
+  it("stops storing resin buttons saved as the old default", () => {
+    const storage = new MemoryStorage();
+    storage.setItem("resinCalcButtons", "[-40,-30,-20,-10,10]");
+
+    const config = readLocalConfig(storage, defaults);
+    expect(config.resinCalcButtons).toBe(defaults.resinCalcButtons);
+
+    writeLocalConfig(storage, config, defaults);
+    expect(storage.getItem("resinCalcButtons")).toBeNull();
+  });
+});
+
+describe("withDefaults", () => {
+  it("fills in missing keys and keeps keys the site doesn't use", () => {
+    expect(withDefaults({ server: "Asia", stats: [] } as object, defaults)).toEqual({
+      ...defaults,
+      server: "Asia",
+      stats: [],
+    });
+  });
+
+  it("follows the system theme and has -60 and +60 resin buttons by default", () => {
+    expect(defaults.theme).toBe("system");
+    expect(defaults.resinCalcButtons).toEqual([-60, -40, -30, -20, -10, 60]);
+  });
+
+  it("replaces resin buttons saved as the old default, and keeps any others", () => {
+    expect(withDefaults({ resinCalcButtons: [-40, -30, -20, -10, 10] }, defaults).resinCalcButtons).toEqual(
+      defaults.resinCalcButtons,
+    );
+    expect(withDefaults({ resinCalcButtons: [-40, -30, -20, 10] }, defaults).resinCalcButtons).toEqual([
+      -40, -30, -20, 10,
+    ]);
+    expect(withDefaults({ resinCalcButtons: [] }, defaults).resinCalcButtons).toEqual([]);
   });
 });
 
@@ -88,6 +124,21 @@ describe("validateConfigData", () => {
 
   it("accepts partial data and unknown languages", () => {
     expect(validateConfigData('{"theme":"dark","language":"nb-NO"}')).toMatchObject({ valid: true });
+    expect(validateConfigData('{"theme":"system"}')).toMatchObject({ valid: true });
+  });
+
+  it("accepts notification thresholds that are whole numbers from 1 to the cap", () => {
+    for (const value of [1, 155, 200]) {
+      expect(validateConfigData(`{"resinNotifyMark":${value}}`)).toMatchObject({ valid: true });
+    }
+
+    for (const value of [0, 201, 1.5, '"100"']) {
+      expect(validateConfigData(`{"resinNotifyMark":${value}}`)).toEqual({
+        valid: false,
+        reason: "value",
+        key: "resinNotifyMark",
+      });
+    }
   });
 
   it("rejects text that isn't a JSON object", () => {

@@ -97,7 +97,7 @@ describe("ConfigSync", () => {
     const { store } = setup(server);
 
     store.set((c) => ({ ...c, theme: "dark" }));
-    store.set((c) => ({ ...c, theme: "light" }));
+    store.set((c) => ({ ...c, theme: defaults.theme }));
     await vi.advanceTimersByTimeAsync(200);
 
     expect(server.requests).toHaveLength(0);
@@ -112,7 +112,7 @@ describe("ConfigSync", () => {
     await vi.advanceTimersByTimeAsync(200);
 
     expect(store.get().realmRank).toBe(9);
-    expect(store.get().theme).toBe("light");
+    expect(store.get().theme).toBe(defaults.theme);
 
     // later changes are based on the server's data
     store.set((c) => ({ ...c, theme: "dark" }));
@@ -130,7 +130,7 @@ describe("ConfigSync", () => {
     await vi.advanceTimersByTimeAsync(200);
 
     expect(onError).toHaveBeenCalledOnce();
-    expect(server.data.theme).toBe("light");
+    expect(server.data.theme).toBe(defaults.theme);
 
     server.fail = false;
     store.set((c) => ({ ...c, realmRank: 3 }));

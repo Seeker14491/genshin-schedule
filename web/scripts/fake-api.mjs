@@ -6,10 +6,9 @@ import { createServer } from "node:http";
 
 const port = Number(process.argv[2] || process.env.PORT || 5555);
 
-let user = { username: "traveler", createdTime: 1600000000000, isAdmin: false, discordUserId: "123456789012345678" };
+let user = { username: "traveler", discordUserId: "123456789012345678" };
 let data = {};
 let version = 0;
-const notifications = new Map();
 
 const token = () => `fake-token-${version}`;
 
@@ -87,20 +86,10 @@ const server = createServer(async (req, res) => {
       applyPatch(data, body.patch);
       version++;
       return send(res, 200, { token: token() });
-
-    case "GET /notifications":
-      return send(res, 200, [...notifications.values()]);
   }
 
-  const notification = path.match(/^\/notifications\/([^/]+)$/);
-
-  if (notification && req.method === "PUT") {
-    notifications.set(decodeURIComponent(notification[1]), body);
-    return send(res, 204);
-  }
-
-  if (notification && req.method === "DELETE") {
-    notifications.delete(decodeURIComponent(notification[1]));
+  // queued notifications are accepted, but never sent
+  if (/^\/notifications\/[^/]+$/.test(path) && (req.method === "PUT" || req.method === "DELETE")) {
     return send(res, 204);
   }
 

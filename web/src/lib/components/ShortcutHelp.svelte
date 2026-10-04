@@ -27,8 +27,6 @@
       <h3 class="font-heading text-style-md font-semibold">{m.resin_calculator()}</h3>
 
       <ul class="flex list-disc flex-col ps-4 marker:text-fg-subtle">
-        <p class="mb-2">{m.shortcuts_resin_note()}</p>
-
         {#each [{ format: m.shortcuts_subtract, key: "2" }, { format: m.shortcuts_add, key: "shift+2" }] as { format, key } (key)}
           <li>
             {#each splitMessage((values) => format({ amount: 20, ...values }), ["key"]) as part, i (i)}

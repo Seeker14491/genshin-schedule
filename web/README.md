@@ -71,7 +71,7 @@ Compile-time variables (they are embedded into the build, so changing them requi
 
 ## Updating for new game versions
 
-- Resin cap and recharge rate: [src/lib/db/resins.ts](src/lib/db/resins.ts)
+- Resin cap, maximum and recharge rate: [src/lib/db/resin.ts](src/lib/db/resin.ts)
 - Realm currency caps and rates: [src/lib/db/realms.ts](src/lib/db/realms.ts)
 - Server time zones and reset time: [src/lib/utils/time.ts](src/lib/utils/time.ts)
 

@@ -1,7 +1,7 @@
 <script lang="ts">
   import { untrack } from "svelte";
   import { DateTime } from "luxon";
-  import { ResinCap, ResinsPerMinute } from "#lib/db/resins.ts";
+  import { ResinCap, ResinPerMinute } from "#lib/db/resin.ts";
   import { syncNotification } from "#lib/utils/notifications.svelte.ts";
   import { config } from "#lib/session.svelte.ts";
   import { clock } from "#lib/clock.svelte.ts";
@@ -13,11 +13,12 @@
   /** Time at which resin reaches the notification threshold. */
   const capTime = $derived(
     DateTime.fromMillis(config.resin.time)
-      .plus({ minutes: (config.resinNotifyMark - config.resin.value) / ResinsPerMinute })
+      .plus({ minutes: (config.resinNotifyMark - config.resin.value) / ResinPerMinute })
       .valueOf(),
   );
 
-  const enabled = $derived(clock.minute < capTime);
+  // only resin recharging up to the threshold sends a notification, not adding resin (or setting it) to reach it
+  const enabled = $derived(config.resin.value < config.resinNotifyMark && clock.minute < capTime);
 
   // the message is a new object only when the time or threshold changes, which is when the server is updated
   const notification = $derived.by(() => {

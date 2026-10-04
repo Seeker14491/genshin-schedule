@@ -27,6 +27,7 @@ async function useLocally(page: Page, data: Record<string, unknown> = {}) {
 }
 
 const resinInput = (page: Page) => page.getByRole("spinbutton", { name: "Resin", exact: true });
+const resinButtons = (page: Page) => page.getByRole("button", { name: /^[+-]\d+$/ });
 
 test.beforeEach(async ({ page }) => {
   await page.clock.setFixedTime(Now);
@@ -123,12 +124,12 @@ test("queues the Discord notification only when it changes", async ({ page }) =>
   await resinInput(page).fill("120");
   const notification = (await put).postDataJSON();
 
-  // 40 resins at 8 minutes each
+  // 40 resin at 8 minutes each
   expect(notification).toMatchObject({
     key: "resin",
     time: Now + 40 * 8 * 60000,
     title: "Resin recharged",
-    description: "You have 160 resins right now!",
+    description: "You have 160 resin right now!",
     url: "http://localhost:4174/home",
     icon: "http://localhost:4174/resin.webp",
   });
@@ -137,6 +138,33 @@ test("queues the Discord notification only when it changes", async ({ page }) =>
   const remove = page.waitForRequest((r) => r.method() === "DELETE" && r.url().endsWith("/notifications/resin"));
   await resinInput(page).fill("170");
   await remove;
+});
+
+test("only queues the Discord notification for resin recharging to the threshold", async ({ page }) => {
+  // between two minutes, so that a notification due right now would still be in the future of the minute
+  await page.clock.setFixedTime(Now + 30000);
+  const api = await signIn(page, { resin: { value: 100, time: Now }, resinNotifyMark: 160 });
+  await page.goto("/home");
+
+  const put = page.waitForRequest((r) => r.method() === "PUT" && r.url().endsWith("/notifications/resin"));
+  await resinInput(page).fill("120");
+  await put;
+
+  // reaching the threshold by setting resin doesn't send a notification
+  const remove = page.waitForRequest((r) => r.method() === "DELETE" && r.url().endsWith("/notifications/resin"));
+  await resinInput(page).fill("160");
+  await remove;
+
+  // neither does going above the cap, but dropping below the threshold again does
+  await resinInput(page).fill("250");
+  await page.waitForTimeout(1500);
+
+  const putAgain = page.waitForRequest((r) => r.method() === "PUT" && r.url().endsWith("/notifications/resin"));
+  await page.getByRole("button", { name: "-60", exact: true }).click();
+  await page.getByRole("button", { name: "-40", exact: true }).click();
+  expect((await putAgain).postDataJSON()).toMatchObject({ time: Now + 30000 + 10 * 8 * 60000 });
+
+  await expect.poll(() => api.find("PUT", "/notifications/resin").length).toBe(2);
 });
 
 test("doesn't queue notifications for users who aren't signed in", async ({ page }) => {
@@ -162,19 +190,161 @@ test("loads data stored in the browser by users who aren't signed in", async ({ 
   expect(await page.evaluate(() => JSON.parse(localStorage.getItem("resin")!))).toEqual({ value: 90, time: Now });
 });
 
-test("adds and subtracts resin with keyboard shortcuts", async ({ page }) => {
-  await useLocally(page, { resin: { value: 100, time: Now } });
+test("adds and subtracts resin with keyboard shortcuts, whichever buttons there are", async ({ page }) => {
+  await useLocally(page, { resin: { value: 100, time: Now }, resinCalcButtons: [-20] });
   await page.goto("/home");
   await expect(resinInput(page)).toHaveValue("100");
 
   await page.keyboard.press("Digit2");
   await expect(resinInput(page)).toHaveValue("80");
 
-  await page.keyboard.press("Shift+Digit1");
-  await expect(resinInput(page)).toHaveValue("90");
+  await page.keyboard.press("Digit6");
+  await expect(resinInput(page)).toHaveValue("20");
+
+  // going below 0 is ignored
+  await page.keyboard.press("Digit3");
+  await page.keyboard.press("Digit2");
+  await expect(resinInput(page)).toHaveValue("0");
+
+  // adding goes above the cap
+  await page.keyboard.press("Shift+Digit9");
+  await page.keyboard.press("Shift+Digit9");
+  await page.keyboard.press("Shift+Digit9");
+  await expect(resinInput(page)).toHaveValue("270");
+
+  // and is ignored above the maximum
+  await resinInput(page).fill("1980");
+  await resinInput(page).blur();
+  await page.keyboard.press("Shift+Digit3");
+  await expect(resinInput(page)).toHaveValue("1980");
+  await page.keyboard.press("Shift+Digit2");
+  await expect(resinInput(page)).toHaveValue("2000");
 
   await page.keyboard.press("k");
   await expect(page.getByRole("dialog", { name: "Keyboard shortcuts" })).toBeVisible();
+});
+
+test("ignores resin shortcuts while the resin calculator is closed", async ({ page }) => {
+  await useLocally(page, { resin: { value: 100, time: Now } });
+  await page.goto("/home");
+
+  await page.getByRole("button", { name: "Resin Calculator" }).click();
+  await page.keyboard.press("Digit2");
+  await page.getByRole("button", { name: "Resin Calculator" }).click();
+
+  await expect(resinInput(page)).toHaveValue("100");
+});
+
+test("allows resin above the cap, up to the maximum", async ({ page }) => {
+  await useLocally(page, { resin: { value: 100, time: Now } });
+  await page.goto("/home");
+
+  await resinInput(page).fill("250");
+  await expect(resinInput(page)).toHaveValue("250");
+  await expect(page.getByText("Your resin is full.")).toBeVisible();
+
+  // it doesn't recharge above the cap
+  await page.clock.setFixedTime(Now + 80 * 60000);
+  await page.reload();
+  await expect(resinInput(page)).toHaveValue("250");
+
+  await resinInput(page).fill("5000");
+  await expect(resinInput(page)).toHaveValue("2000");
+  await expect(page.getByRole("button", { name: "+60", exact: true })).toBeHidden();
+
+  await resinInput(page).fill("1940");
+  await page.getByRole("button", { name: "+60", exact: true }).click();
+  await expect(resinInput(page)).toHaveValue("2000");
+});
+
+test("replaces resin buttons saved as the old default", async ({ page }) => {
+  const api = await signIn(page, { resin: { value: 100, time: Now }, resinCalcButtons: [-40, -30, -20, -10, 10] });
+  await page.goto("/home");
+  await expect(resinButtons(page)).toHaveText(["-60", "-40", "-30", "-20", "-10", "+60"]);
+
+  const patch = page.waitForRequest((r) => r.method() === "PATCH");
+  await resinInput(page).fill("50");
+  const operations: { path: string }[] = (await patch).postDataJSON().patch;
+
+  expect(operations.some((operation) => operation.path.startsWith("/resinCalcButtons"))).toBe(true);
+  await expect.poll(() => api.find("PATCH", "/sync").length).toBe(1);
+});
+
+test("chooses resin buttons, which are always shown from lowest to highest", async ({ page }) => {
+  // saved in another order by an earlier version, which also allowed values that can't be chosen any more
+  await useLocally(page, { resin: { value: 150, time: Now }, resinCalcButtons: [10, -20, -100] });
+  await page.goto("/home");
+  await expect(resinButtons(page)).toHaveText(["-100", "-20", "+10"]);
+
+  await page.goto("/settings");
+  const picker = page.getByRole("group", { name: "Resin calculator buttons" });
+  const toggle = (name: string) => picker.getByRole("button", { name, exact: true });
+
+  await expect(toggle("-20")).toHaveAttribute("aria-pressed", "true");
+  await expect(toggle("-60")).toHaveAttribute("aria-pressed", "false");
+  await expect(toggle("-100")).toHaveAttribute("aria-pressed", "true");
+
+  await toggle("-100").click();
+  await expect(toggle("-100")).toBeHidden();
+
+  await toggle("+60").click();
+  await toggle("-60").click();
+  await expect(toggle("-60")).toHaveAttribute("aria-pressed", "true");
+  expect(await page.evaluate(() => JSON.parse(localStorage.getItem("resinCalcButtons")!))).toEqual([-60, -20, 10, 60]);
+
+  await page.goto("/home");
+  await expect(resinButtons(page)).toHaveText(["-60", "-20", "+10", "+60"]);
+});
+
+test("follows the system theme until another one is chosen", async ({ page }) => {
+  await page.emulateMedia({ colorScheme: "dark" });
+  await useLocally(page);
+  await page.goto("/settings");
+
+  const theme = page.getByLabel("Theme");
+  await expect(theme).toHaveValue("system");
+  await expect(page.locator("html")).toHaveClass(/dark/);
+
+  await page.emulateMedia({ colorScheme: "light" });
+  await expect(page.locator("html")).toHaveClass(/light/);
+
+  await theme.selectOption("dark");
+  await expect(page.locator("html")).toHaveClass(/dark/);
+
+  await page.reload();
+  await expect(page.locator("html")).toHaveClass(/dark/);
+  await expect(theme).toHaveValue("dark");
+});
+
+test("sets the notification threshold to any whole number from 1 to 200", async ({ page }) => {
+  const api = await signIn(page, { resin: { value: 100, time: Now } });
+  await page.goto("/settings");
+
+  const threshold = page.getByLabel("Send resin notification at");
+  await expect(threshold).toHaveValue("200");
+
+  const put = page.waitForRequest((r) => r.method() === "PUT" && r.url().endsWith("/notifications/resin"));
+  await threshold.fill("155");
+  expect((await put).postDataJSON()).toMatchObject({
+    time: Now + 55 * 8 * 60000,
+    description: "You have 155 resin right now!",
+  });
+
+  await threshold.fill("300");
+  await expect(threshold).toHaveValue("200");
+
+  await threshold.fill("0");
+  await expect(threshold).toHaveValue("1");
+
+  // an empty field shows the saved value again when it loses focus
+  await threshold.fill("");
+  await threshold.blur();
+  await expect(threshold).toHaveValue("1");
+
+  // added or replaced, depending on whether the first change was already saved
+  await expect
+    .poll(() => api.find("PATCH", "/sync").at(-1)?.postDataJSON().patch)
+    .toContainEqual(expect.objectContaining({ path: "/resinNotifyMark", value: 1 }));
 });
 
 test.describe("in Japanese", () => {

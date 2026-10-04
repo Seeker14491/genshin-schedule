@@ -16,57 +16,6 @@ public class NotificationController(SyncDbContext db, ILogger<NotificationContro
     });
 
     /// <summary>
-    /// Retrieves all notifications in queue.
-    /// </summary>
-    [HttpGet]
-    public async Task<ActionResult<Notification[]>> GetAsync()
-    {
-        var userId = HttpContext.GetUserId();
-
-        try
-        {
-            var notifications = await db.Notifications.AsNoTracking().Where(n => n.User!.Id == userId).ToListAsync();
-
-            _actions.WithLabels("list").Inc();
-
-            return Ok(notifications.Select(Notification.FromDbModel).ToArray());
-        }
-        catch (Exception e)
-        {
-            logger.LogWarning(e, "Could not retrieve notifications for user {UserId}.", userId);
-
-            return StatusCode(500, $"Could not retrieve notifications for user {userId}.");
-        }
-    }
-
-    /// <summary>
-    /// Retrieves a notification in queue given its key.
-    /// </summary>
-    [HttpGet("{key}")]
-    public async Task<ActionResult<Notification>> GetAsync(string key)
-    {
-        var userId = HttpContext.GetUserId();
-
-        try
-        {
-            var notification = await db.Notifications.AsNoTracking().FirstOrDefaultAsync(n => n.User!.Id == userId && n.Key == key);
-
-            if (notification == null)
-                return NotFound($"Notification '{key}' not found.");
-
-            _actions.WithLabels("get").Inc();
-
-            return Ok(Notification.FromDbModel(notification));
-        }
-        catch (Exception e)
-        {
-            logger.LogWarning(e, "Could not retrieve notification '{Key}' for user {UserId}.", key, userId);
-
-            return StatusCode(500, $"Could not retrieve notification '{key}' for user {userId}.");
-        }
-    }
-
-    /// <summary>
     /// Creates or updates a notification in queue.
     /// </summary>
     [HttpPut("{key}")]

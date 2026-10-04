@@ -1,11 +1,11 @@
-import { ResinCap } from "#lib/db/resins.ts";
+import { ResinCap } from "#lib/db/resin.ts";
 import type { Language } from "#lib/languages.ts";
 
 export type Config = {
   /** A language code, or "default" to use the browser's language. Unknown codes are treated as "default". */
   language: Language | "default";
   server: "America" | "Europe" | "Asia" | "TW, HK, MO";
-  theme: "light" | "dark";
+  theme: "system" | "light" | "dark";
   background: Background | "none";
   hiddenWidgets: {
     [key in "resin" | "realm"]?: boolean;
@@ -15,6 +15,7 @@ export type Config = {
     time: number;
   };
   resinEstimateMode: "time" | "value";
+  /** Resin at which a notification is sent, a whole number from 1 to the cap. */
   resinNotifyMark: number;
   realmEnergy: number;
   realmRank: number;
@@ -46,7 +47,7 @@ export function getDefaultConfig(now: number): Config {
   return {
     language: "default",
     server: "America",
-    theme: "light",
+    theme: "system",
     background: "paimon",
     hiddenWidgets: { realm: true },
     resin: {
@@ -61,11 +62,35 @@ export function getDefaultConfig(now: number): Config {
       value: 0,
       time: now,
     },
-    resinCalcButtons: [-40, -30, -20, -10, 10],
+    resinCalcButtons: [-60, -40, -30, -20, -10, 60],
   };
 }
 
 export const ConfigKeys = Object.keys(getDefaultConfig(0)) as (keyof Config)[];
+
+// the default resin buttons before -60 and +60 replaced +10
+const OldDefaultResinButtons = [-40, -30, -20, -10, 10];
+
+/**
+ * Fills in defaults for keys missing from saved data.
+ *
+ * Signed-in users' data also has the defaults of when they first changed something, since the first sync saves them.
+ * Resin buttons saved as the old default set are replaced with the current one, as they were most likely never changed.
+ */
+export function withDefaults(data: Partial<Config>, defaults: Config): Config {
+  const config = { ...defaults, ...data };
+  const buttons = config.resinCalcButtons;
+
+  if (
+    Array.isArray(buttons) &&
+    buttons.length === OldDefaultResinButtons.length &&
+    buttons.every((value, i) => value === OldDefaultResinButtons[i])
+  ) {
+    config.resinCalcButtons = defaults.resinCalcButtons;
+  }
+
+  return config;
+}
 
 export type SetConfig<T> = T | ((previous: T) => T);
 
@@ -102,21 +127,21 @@ export class ConfigStore {
  * Each key is stored separately as JSON, and keys with default values are not stored.
  */
 export function readLocalConfig(storage: Storage, defaults: Config): Config {
-  const config = { ...defaults };
+  const data: Record<string, unknown> = {};
 
   for (const key of ConfigKeys) {
     try {
       const value = storage.getItem(key);
 
       if (value !== null) {
-        (config as Record<string, unknown>)[key] = JSON.parse(value);
+        data[key] = JSON.parse(value);
       }
     } catch {
       // ignored
     }
   }
 
-  return config;
+  return withDefaults(data, defaults);
 }
 
 /** Writes the config to browser storage in the format `readLocalConfig` reads. Other keys in storage are left alone. */
@@ -137,12 +162,14 @@ const isTimedValue = (value: unknown) =>
   isNumber((value as Config["resin"]).value) &&
   isNumber((value as Config["resin"]).time);
 const isOneOf = (values: readonly unknown[]) => (value: unknown) => values.includes(value);
+const isIntegerIn = (min: number, max: number) => (value: unknown) =>
+  Number.isInteger(value) && (value as number) >= min && (value as number) <= max;
 
 const validators: Record<keyof Config, (value: unknown) => boolean> = {
   // unknown languages are allowed, since they're treated as "default"
   language: (value) => typeof value === "string",
   server: isOneOf(ServerList),
-  theme: isOneOf(["light", "dark"]),
+  theme: isOneOf(["system", "light", "dark"]),
   background: isOneOf([...Backgrounds, "none"]),
   hiddenWidgets: (value) =>
     !!value &&
@@ -151,7 +178,7 @@ const validators: Record<keyof Config, (value: unknown) => boolean> = {
     Object.values(value).every((hidden) => typeof hidden === "boolean"),
   resin: isTimedValue,
   resinEstimateMode: isOneOf(["time", "value"]),
-  resinNotifyMark: isNumber,
+  resinNotifyMark: isIntegerIn(1, ResinCap),
   realmEnergy: isNumber,
   realmRank: isNumber,
   realmCurrency: isTimedValue,

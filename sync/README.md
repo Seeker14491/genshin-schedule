@@ -79,10 +79,6 @@ Only PostgreSQL connection strings are accepted at the moment.
 
 It is possible to use other [database providers](https://learn.microsoft.com/ef/core/providers) supported by EF Core. You will need to edit the `UseNpgsql` call in [Program.cs](Program.cs) and regenerate the migrations.
 
-## User administration capabilities
+## User administration
 
-This project provides only the minimum amount of API required by `web`, which does not include any advanced user administration capabilities.
-
-All users are either an admin or not, which is determined by a simple boolean column in the user table. By default, the first registered user (ID 1) receives the admin flag and nobody else.
-
-An authentication bypass API that generates auth tokens of any user without password check is provided for when administrators need to reset a specific user's password. Needless to say, this endpoint is available only to users with the admin flag.
+The API only provides what `web` needs, so there are no administration endpoints. Signed-in users can change their own username and password in settings.

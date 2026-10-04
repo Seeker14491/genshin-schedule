@@ -7,7 +7,7 @@ export class FakeApi {
   data: Record<string, unknown> = {};
   token = "sync-0";
   requests: Request[] = [];
-  user = { username: "traveler", createdTime: 0, isAdmin: false, discordUserId: null };
+  user = { username: "traveler", discordUserId: null };
 
   /** Status to respond with to authenticated requests, e.g. 401 to reject the token. */
   authStatus = 200;

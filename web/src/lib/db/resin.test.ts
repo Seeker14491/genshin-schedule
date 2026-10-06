@@ -5,6 +5,7 @@ import {
   formatResinButton,
   getResinAt,
   getResinRecharge,
+  getResinTime,
   ResinCap,
   ResinMax,
   roundResin,
@@ -27,6 +28,13 @@ describe("resin", () => {
 
     // times before the last change count as the time of the change
     expect(getResinAt(resin, -80 * Minute)).toBe(100);
+  });
+
+  it("tells when it recharges to a value", () => {
+    const resin = { value: 100.5, time: 1000 };
+
+    expect(getResinTime(resin, 110)).toBe(1000 + 76 * Minute);
+    expect(getResinAt(resin, getResinTime(resin, ResinCap))).toBe(ResinCap);
   });
 
   it("doesn't recharge above the cap", () => {

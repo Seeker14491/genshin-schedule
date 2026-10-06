@@ -39,6 +39,7 @@ describe("local config", () => {
     server: '"Europe"',
     resin: '{"value":120,"time":1790861400000}',
     resinCalcButtons: "[-40,-20,20]",
+    resinEstimateMode: '"value"',
     stats: '[{"id":"2024-01-01","time":0,"resinsSpent":160}]',
     statRetention: "28",
     "color-mode": "dark",
@@ -62,11 +63,12 @@ describe("local config", () => {
     Object.entries(stored).forEach(([key, value]) => storage.setItem(key, value));
 
     const config = readLocalConfig(storage, defaults);
-    writeLocalConfig(storage, { ...config, server: defaults.server, realmRank: 5 }, defaults);
+    writeLocalConfig(storage, { ...config, server: defaults.server, timeZone: "server", realmRank: 5 }, defaults);
 
     expect(Object.fromEntries(storage.items)).toEqual({
       ...stored,
       server: undefined,
+      timeZone: '"server"',
       realmRank: "5",
     });
   });
@@ -99,8 +101,9 @@ describe("withDefaults", () => {
     });
   });
 
-  it("follows the system theme and has -60 and +60 resin buttons by default", () => {
+  it("follows the system theme, shows local time and has -60 and +60 resin buttons by default", () => {
     expect(defaults.theme).toBe("system");
+    expect(defaults.timeZone).toBe("local");
     expect(defaults.resinCalcButtons).toEqual([-60, -40, -30, -20, -10, 60]);
   });
 
@@ -125,6 +128,12 @@ describe("validateConfigData", () => {
   it("accepts partial data and unknown languages", () => {
     expect(validateConfigData('{"theme":"dark","language":"nb-NO"}')).toMatchObject({ valid: true });
     expect(validateConfigData('{"theme":"system"}')).toMatchObject({ valid: true });
+    expect(validateConfigData('{"timeZone":"server"}')).toMatchObject({ valid: true });
+  });
+
+  it("accepts settings of removed features with any value", () => {
+    expect(validateConfigData('{"resinEstimateMode":"time"}')).toMatchObject({ valid: true });
+    expect(validateConfigData('{"resinEstimateMode":5}')).toMatchObject({ valid: true });
   });
 
   it("accepts notification thresholds that are whole numbers from 1 to the cap", () => {
@@ -149,6 +158,7 @@ describe("validateConfigData", () => {
 
   it("rejects values of the wrong type", () => {
     expect(validateConfigData('{"server":"Mars"}')).toEqual({ valid: false, reason: "value", key: "server" });
+    expect(validateConfigData('{"timeZone":"UTC+1"}')).toEqual({ valid: false, reason: "value", key: "timeZone" });
     expect(validateConfigData('{"resin":{"value":"120","time":0}}')).toEqual({
       valid: false,
       reason: "value",

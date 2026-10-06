@@ -5,6 +5,8 @@ export type Config = {
   /** A language code, or "default" to use the browser's language. Unknown codes are treated as "default". */
   language: Language | "default";
   server: "America" | "Europe" | "Asia" | "TW, HK, MO";
+  /** Whether times are shown in the browser's time zone or the server's. */
+  timeZone: "local" | "server";
   theme: "system" | "light" | "dark";
   background: Background | "none";
   hiddenWidgets: {
@@ -14,7 +16,6 @@ export type Config = {
     value: number;
     time: number;
   };
-  resinEstimateMode: "time" | "value";
   /** Resin at which a notification is sent, a whole number from 1 to the cap. */
   resinNotifyMark: number;
   realmEnergy: number;
@@ -47,6 +48,7 @@ export function getDefaultConfig(now: number): Config {
   return {
     language: "default",
     server: "America",
+    timeZone: "local",
     theme: "system",
     background: "paimon",
     hiddenWidgets: { realm: true },
@@ -54,7 +56,6 @@ export function getDefaultConfig(now: number): Config {
       value: 0,
       time: now,
     },
-    resinEstimateMode: "time",
     resinNotifyMark: ResinCap,
     realmEnergy: 0,
     realmRank: 1,
@@ -169,6 +170,7 @@ const validators: Record<keyof Config, (value: unknown) => boolean> = {
   // unknown languages are allowed, since they're treated as "default"
   language: (value) => typeof value === "string",
   server: isOneOf(ServerList),
+  timeZone: isOneOf(["local", "server"]),
   theme: isOneOf(["system", "light", "dark"]),
   background: isOneOf([...Backgrounds, "none"]),
   hiddenWidgets: (value) =>
@@ -177,7 +179,6 @@ const validators: Record<keyof Config, (value: unknown) => boolean> = {
     !Array.isArray(value) &&
     Object.values(value).every((hidden) => typeof hidden === "boolean"),
   resin: isTimedValue,
-  resinEstimateMode: isOneOf(["time", "value"]),
   resinNotifyMark: isIntegerIn(1, ResinCap),
   realmEnergy: isNumber,
   realmRank: isNumber,

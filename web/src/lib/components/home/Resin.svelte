@@ -1,18 +1,16 @@
 <script lang="ts">
   import { BellIcon } from "@lucide/svelte";
-  import { DateTime, Duration } from "luxon";
   import {
     addResin,
     getResinAt,
+    getResinTime,
     ResinCap,
     ResinMax,
-    ResinPerMinute,
     roundResin,
     sortResinButtons,
   } from "#lib/db/resin.ts";
-  import type { Config } from "#lib/utils/config.ts";
   import { getDigit, onHotkey } from "#lib/utils/hotkeys.svelte.ts";
-  import { formatDuration, formatDurationPart, formatTime, getServerTime } from "#lib/utils/time.ts";
+  import { formatClockTime, formatShortDuration, getDisplayTime, getEstimate } from "#lib/utils/time.ts";
   import { config } from "#lib/session.svelte.ts";
   import { clock } from "#lib/clock.svelte.ts";
   import { locale } from "#lib/i18n.svelte.ts";
@@ -25,12 +23,11 @@
   import Panel from "../Panel.svelte";
   import AutoSizeInput from "../AutoSizeInput.svelte";
 
-  const estimateModes: Config["resinEstimateMode"][] = ["time", "value"];
-
   const resinAt = (ms: number) => getResinAt(config.resin, ms);
 
-  const time = $derived(getServerTime(clock.minute, config.server));
-  const current = $derived(resinAt(clock.minute));
+  // updated every second, so that resin reaches a value when it's due (e.g. when the Discord notification is sent)
+  const time = $derived(getDisplayTime(clock.now, config));
+  const current = $derived(resinAt(clock.now));
 
   // from lowest to highest, even if saved in another order. Buttons that would go below 0 or above the maximum are left out
   const buttons = $derived(
@@ -48,57 +45,25 @@
     () => !config.hiddenWidgets.resin,
   );
 
-  /** How much resin there will be after some time: 2 hours, then every 4 hours up to 24, then when full. */
-  const estimatesByTime = $derived.by(() => {
-    const result: { duration: string; value: number }[] = [];
+  // e.g. "1h 20m (4:05 PM)"
+  function estimateTime(value: number) {
+    const estimate = getEstimate(time, getResinTime(config.resin, value));
+    const duration = formatShortDuration(locale.current, estimate.duration, ["hour", "minute"]);
+    return `${duration} (${formatClockTime(estimate.time, { locale: locale.current, hour12: locale.hour12 })})`;
+  }
 
-    const addValue = (hours: number) => {
-      const value = roundResin(resinAt(time.plus({ hours }).valueOf()));
-
-      if (value < ResinCap) {
-        result.push({
-          duration: formatDurationPart(locale.current, Duration.fromObject({ hours }), "hour"),
-          value,
-        });
-        return true;
-      }
-    };
-
-    addValue(2);
-    for (let i = 4; addValue(i) && i < 24; i += 4);
-
-    const capTime = DateTime.fromMillis(config.resin.time)
-      .plus({ minutes: (ResinCap - config.resin.value) / ResinPerMinute })
-      .diff(time);
-
-    result.push({
-      duration: `${formatDuration(locale.current, capTime, ["hour", "minute"])} (${formatTime(time.plus(capTime), ["hour", "minute"])})`,
-      value: ResinCap,
-    });
-
-    return result;
-  });
-
-  /** When resin will reach every multiple of 20. */
-  const estimatesByValue = $derived.by(() => {
+  /** When resin will reach every multiple of 20 above the current resin, up to the cap. */
+  const estimates = $derived.by(() => {
     const result: { duration: string; value: number }[] = [];
 
     for (let value = 20; value <= ResinCap; value += 20) {
-      const remaining = value - resinAt(time.valueOf());
-
-      if (remaining > 0) {
-        result.push({ duration: estimateTime(remaining), value });
+      if (value > current) {
+        result.push({ duration: estimateTime(value), value });
       }
     }
 
     return result;
   });
-
-  // e.g. "1 hour 20 minutes (04:05)"
-  function estimateTime(amount: number) {
-    const remaining = Duration.fromObject({ minutes: amount / ResinPerMinute });
-    return `${formatDuration(locale.current, remaining, ["hour", "minute"])} (${formatTime(time.plus(remaining), ["hour", "minute"])})`;
-  }
 
   /** Adds resin (or subtracts it, if `delta` is negative), unless that would go below 0 or above the maximum. */
   function changeResin(delta: number) {
@@ -120,19 +85,7 @@
       wider screens: everything is on one row; wrap-reverse makes the buttons wrap above the counter if they don't fit
     -->
     <div class="flex flex-wrap items-center gap-2 sm:flex-wrap-reverse">
-      <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_noninteractive_element_interactions -->
-      <img
-        alt={m.resin()}
-        title={m.switch_estimation_mode()}
-        src={ResinIcon}
-        class={["size-10 scale-140", current < ResinCap && "cursor-pointer"]}
-        onclick={() => {
-          if (current < ResinCap) {
-            config.resinEstimateMode =
-              estimateModes[(estimateModes.indexOf(config.resinEstimateMode) + 1) % estimateModes.length];
-          }
-        }}
-      />
+      <img alt={m.resin()} src={ResinIcon} class="size-10 scale-140" />
 
       <div class="order-1 flex w-full items-center gap-2 sm:order-none sm:w-auto">
         <AutoSizeInput
@@ -169,7 +122,7 @@
         <span class="self-start bg-highlight">{m.resin_full()}</span>
       {:else}
         <div>
-          {#each config.resinEstimateMode === "value" ? estimatesByValue : estimatesByTime as { duration, value }, i (i)}
+          {#each estimates as { duration, value }, i (i)}
             <div>{m.value_in_duration({ value, duration })}</div>
           {/each}
         </div>
@@ -180,10 +133,7 @@
           <BellIcon size="0.75em" />
 
           <a href="/home/notifications" class="link">
-            {m.value_in_duration({
-              value: config.resinNotifyMark,
-              duration: estimateTime(config.resinNotifyMark - current),
-            })}
+            {m.value_in_duration({ value: config.resinNotifyMark, duration: estimateTime(config.resinNotifyMark) })}
           </a>
         </div>
       {/if}

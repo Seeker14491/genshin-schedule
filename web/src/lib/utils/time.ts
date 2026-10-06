@@ -17,6 +17,11 @@ export function getServerTime(ms: number, server: Config["server"]) {
   return DateTime.fromMillis(ms, { zone: ServerTimeZones[server] });
 }
 
+/** Returns `ms` as a time in the zone times are shown in: the browser's, or the selected server's. */
+export function getDisplayTime(ms: number, config: Pick<Config, "timeZone" | "server">) {
+  return DateTime.fromMillis(ms, { zone: config.timeZone === "local" ? "system" : ServerTimeZones[config.server] });
+}
+
 /** Returns the time of the next daily reset after `current`, in the same zone as `current`. */
 export function getServerResetTime(current: DateTime) {
   return current
@@ -25,72 +30,105 @@ export function getServerResetTime(current: DateTime) {
     .set({ hour: ServerResetHour });
 }
 
-export type TimeUnit = "year" | "week" | "day" | "hour" | "minute" | "second" | "millisecond";
-export const TimeUnits: TimeUnit[] = ["year", "week", "day", "hour", "minute", "second", "millisecond"];
-
-// number of each unit in the previous (larger) unit
-const TimeUnitSizes: number[] = [52, 7, 24, 60, 60, 1000];
-
-function getUnitMs(unit: TimeUnit) {
-  let value = 1;
-
-  for (let i = TimeUnits.indexOf(unit); i < TimeUnitSizes.length; i++) {
-    value *= TimeUnitSizes[i];
-  }
-
-  return value;
+/**
+ * Whether the browser's own locale uses 12-hour time. The site's language isn't enough, since its only English is
+ * American English.
+ */
+export function browserUses12HourTime() {
+  const { hourCycle } = new Intl.DateTimeFormat(undefined, { hour: "numeric" }).resolvedOptions();
+  return hourCycle === "h11" || hourCycle === "h12";
 }
 
-/** Returns the largest unit that the duration is at least one of. */
-export function getLargestUnit(duration: Duration): TimeUnit {
-  const ms = Math.abs(duration.as("milliseconds"));
-  return TimeUnits.find((unit) => ms >= getUnitMs(unit)) || "millisecond";
+export type TimeFormat = {
+  /** The language to format in. */
+  locale: string;
+  /** Whether to use 12-hour time. */
+  hour12: boolean;
+  /** Whether to show seconds. */
+  seconds?: boolean;
+  /** Whether to show the date as well, e.g. "10/5/2026, 6:19 AM". */
+  date?: boolean;
+};
+
+/**
+ * Intl options for a time such as "4:05 PM" or "16:05". 24-hour time pads the hour, as is usual. `hour12: false` isn't
+ * used for it, since some browsers have shown midnight as "24:00" with it.
+ */
+function getTimeOptions({ hour12, seconds, date }: TimeFormat): Intl.DateTimeFormatOptions {
+  return {
+    ...(date && { year: "numeric", month: "numeric", day: "numeric" }),
+    ...(hour12 ? { hour12: true, hour: "numeric" } : { hourCycle: "h23", hour: "2-digit" }),
+    minute: "2-digit",
+    ...(seconds && { second: "2-digit" }),
+  };
 }
 
-/** Formats a time like "04:05" using the given units. */
-export function formatTime(time: DateTime, units: Exclude<TimeUnit, "year" | "week">[]) {
-  return units.map((unit) => time.get(unit).toString().padStart(2, "0")).join(":");
+/** Formats a time in its zone, e.g. "4:05 PM" or "16:05", in the given language and 12- or 24-hour time. */
+export function formatClockTime(time: DateTime, format: TimeFormat) {
+  return time.setLocale(format.locale).toLocaleString(getTimeOptions(format));
 }
+
+/** Like `formatClockTime`, but split into parts such as the hour and the AM/PM marker, in the language's order. */
+export function formatClockTimeParts(time: DateTime, format: TimeFormat) {
+  return time.setLocale(format.locale).toLocaleParts(getTimeOptions(format));
+}
+
+/**
+ * When something happening at `ms` is shown to happen, and how long until then, for estimates. The time is rounded up
+ * to the next whole minute, so that it's never earlier than it really is, and the duration is counted from the start of
+ * the current minute, so that both match the clock. `now` gives the time zone.
+ */
+export function getEstimate(now: DateTime, ms: number) {
+  const time = DateTime.fromMillis(Math.ceil(ms / 60000) * 60000, { zone: now.zone });
+  return { time, duration: Duration.fromMillis(time.toMillis() - Math.floor(now.toMillis() / 60000) * 60000) };
+}
+
+export type ShortDurationUnit = "day" | "hour" | "minute";
 
 const unitFormats = new Map<string, Intl.NumberFormat>();
 
-// formats e.g. "5 hours" in the given language, using the browser's translations of time units
-function formatUnit(locale: string, value: number, unit: TimeUnit) {
+// formats e.g. "5h" in the given language, using the browser's translations of time units
+function formatUnit(locale: string, value: number, unit: ShortDurationUnit) {
   const key = `${locale} ${unit}`;
   let format = unitFormats.get(key);
 
   if (!format) {
-    format = new Intl.NumberFormat(locale, { style: "unit", unit, unitDisplay: "long" });
+    format = new Intl.NumberFormat(locale, { style: "unit", unit, unitDisplay: "narrow" });
     unitFormats.set(key, format);
   }
 
   return format.format(value);
 }
 
-/** Formats a duration in a single unit, e.g. "5 hours". */
-export function formatDurationPart(locale: string, duration: Duration, unit: TimeUnit) {
-  return formatUnit(locale, Math.floor(duration.as(unit)), unit);
-}
+const durationFormats = new Map<string, Intl.DurationFormat>();
 
-/** Formats a duration using the given units, omitting zero values, e.g. "2 hours 5 minutes". */
-export function formatDuration(locale: string, duration: Duration, units = TimeUnits) {
-  const parts: string[] = [];
+/**
+ * Formats a duration compactly using the given units, from largest to smallest, e.g. "2h 56m" or "1d 3h 20m". Values
+ * are rounded down, and zero values are left out unless the duration is shorter than the smallest unit.
+ */
+export function formatShortDuration(locale: string, duration: Duration, units: ShortDurationUnit[]) {
+  const values = duration.shiftTo(...units.map((unit) => `${unit}s` as const)).toObject();
 
-  for (const unit of units) {
-    const unitIndex = TimeUnits.indexOf(unit);
-    let value = duration.as(unit);
+  const parts = units
+    .map((unit) => ({ unit, value: Math.floor(values[`${unit}s`] ?? 0) }))
+    .filter(({ value }) => value !== 0);
 
-    // once a larger unit has been printed, only print the remainder of smaller units
-    if (parts.length && unitIndex >= 1) {
-      value %= TimeUnitSizes[unitIndex - 1];
-    }
-
-    value = Math.floor(value);
-
-    if (value) {
-      parts.push(formatUnit(locale, value, unit));
-    }
+  // Intl.DurationFormat leaves out zero values even if they're all zero
+  if (!parts.length) {
+    return formatUnit(locale, 0, units[units.length - 1]);
   }
 
-  return parts.join(" ");
+  // browsers without Intl.DurationFormat (before 2025) get the short unit names, separated by spaces
+  if (typeof Intl.DurationFormat !== "function") {
+    return parts.map(({ unit, value }) => formatUnit(locale, value, unit)).join(" ");
+  }
+
+  let format = durationFormats.get(locale);
+
+  if (!format) {
+    format = new Intl.DurationFormat(locale, { style: "narrow" });
+    durationFormats.set(locale, format);
+  }
+
+  return format.format(Object.fromEntries(parts.map(({ unit, value }) => [`${unit}s`, value])));
 }

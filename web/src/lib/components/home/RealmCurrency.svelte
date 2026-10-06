@@ -1,15 +1,14 @@
 <script lang="ts">
-  import { DateTime, Duration } from "luxon";
   import {
     clampEnergy,
     clampRank,
     getCurrencyCap,
     getCurrencyRate,
     getCurrencyRecharge,
+    getCurrencyTime,
     roundCurrency,
   } from "#lib/db/realms.ts";
-  import type { Config } from "#lib/utils/config.ts";
-  import { formatDuration, formatTime, getServerTime } from "#lib/utils/time.ts";
+  import { formatClockTime, formatShortDuration, getDisplayTime, getEstimate } from "#lib/utils/time.ts";
   import { config } from "#lib/session.svelte.ts";
   import { clock } from "#lib/clock.svelte.ts";
   import { locale } from "#lib/i18n.svelte.ts";
@@ -21,67 +20,30 @@
   import AutoSizeInput from "../AutoSizeInput.svelte";
   import Button from "../ui/Button.svelte";
 
-  const estimateModes: Config["resinEstimateMode"][] = ["time", "value"];
-
   // currency at a given time. Times before the last change count as the time of the change
   const currencyAt = (ms: number) =>
     config.realmCurrency.value + getCurrencyRecharge(config.realmEnergy, Math.max(0, ms - config.realmCurrency.time));
 
-  const time = $derived(getServerTime(clock.minute, config.server));
-  const current = $derived(currencyAt(time.valueOf()));
+  // updated every second, like resin
+  const time = $derived(getDisplayTime(clock.now, config));
+  const current = $derived(currencyAt(clock.now));
   const cap = $derived(getCurrencyCap(config.realmRank));
   const rate = $derived(getCurrencyRate(config.realmEnergy));
 
-  // e.g. "10/5/2026, 6:19 AM"
-  const formatDate = (date: DateTime) => date.setLocale(locale.current).toLocaleString(DateTime.DATETIME_SHORT);
-
-  /** How much currency there will be after doubling amounts of time, then when it will be full. */
-  const estimatesByTime = $derived.by(() => {
-    const result: { duration: string; value: number }[] = [];
-
-    const addValue = (hours: number) => {
-      const value = roundCurrency(currencyAt(time.plus({ hours }).valueOf()), config.realmRank);
-
-      if (value < cap) {
-        result.push({
-          duration: formatDuration(locale.current, Duration.fromObject({ hours }), ["day", "hour"]),
-          value,
-        });
-        return true;
-      }
-    };
-
-    for (let i = 2; addValue(i); i *= 2);
-
-    const remainingTime = Duration.fromObject({ hours: (cap - current) / rate });
-
-    result.push({
-      duration: `${formatDuration(locale.current, remainingTime, ["day", "hour"])} (${formatDate(time.plus(remainingTime))})`,
-      value: cap,
-    });
-
-    return result;
-  });
-
-  /** When currency will reach doubling amounts, then the cap. */
-  const estimatesByCurrency = $derived.by(() => {
+  /** When currency will reach doubling amounts, then the cap, e.g. "1d 3h 20m (10/5/2026, 6:19 AM)". */
+  const estimates = $derived.by(() => {
     const result: { duration: string; value: number }[] = [];
 
     const addValue = (value: number) => {
-      const remaining = value - current;
-
-      if (remaining > 0) {
-        const remainingTime = Duration.fromObject({ hours: remaining / rate });
-        const estimate = time.plus(remainingTime);
+      if (value > current) {
+        const estimate = getEstimate(time, getCurrencyTime(config.realmCurrency, config.realmEnergy, value));
+        const duration = formatShortDuration(locale.current, estimate.duration, ["day", "hour", "minute"]);
 
         // show the date as well if it's more than a day away
-        const estimatedDate =
-          estimate.toMillis() > time.plus({ days: 1 }).toMillis()
-            ? formatDate(estimate)
-            : formatTime(estimate, ["hour", "minute"]);
+        const date = estimate.time.toMillis() > time.plus({ days: 1 }).toMillis();
 
         result.push({
-          duration: `${formatDuration(locale.current, remainingTime, ["day", "hour", "minute"])} (${estimatedDate})`,
+          duration: `${duration} (${formatClockTime(estimate.time, { locale: locale.current, hour12: locale.hour12, date })})`,
           value,
         });
       }
@@ -99,19 +61,7 @@
 <Widget type="realm" heading={m.realm_calculator_title()}>
   <Panel>
     <div class="flex items-center gap-2">
-      <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_noninteractive_element_interactions -->
-      <img
-        alt={m.realm_currency()}
-        title={m.switch_estimation_mode()}
-        src={RealmCurrencyIcon}
-        class={["size-10 scale-120", current < cap && "cursor-pointer"]}
-        onclick={() => {
-          if (current < cap) {
-            config.resinEstimateMode =
-              estimateModes[(estimateModes.indexOf(config.resinEstimateMode) + 1) % estimateModes.length];
-          }
-        }}
-      />
+      <img alt={m.realm_currency()} src={RealmCurrencyIcon} class="size-10 scale-120" />
 
       <div>{m.adeptal_energy()}:</div>
 
@@ -175,7 +125,7 @@
         {#if current >= cap}
           <span class="bg-highlight">{m.realm_full()}</span>
         {:else}
-          {#each config.resinEstimateMode === "value" ? estimatesByCurrency : estimatesByTime as { duration, value }, i (i)}
+          {#each estimates as { duration, value }, i (i)}
             <div>{m.value_in_duration({ value, duration })}</div>
           {/each}
         {/if}

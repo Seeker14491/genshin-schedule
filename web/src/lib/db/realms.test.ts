@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { clampRank, getCurrencyCap, getCurrencyRate, getCurrencyRecharge, roundCurrency } from "./realms";
+import {
+  clampRank,
+  getCurrencyCap,
+  getCurrencyRate,
+  getCurrencyRecharge,
+  getCurrencyTime,
+  roundCurrency,
+} from "./realms";
 
 describe("realm currency", () => {
   it("looks up the cap by trust rank, clamping the rank", () => {
@@ -18,6 +25,15 @@ describe("realm currency", () => {
 
   it("only recharges per full hour", () => {
     expect(getCurrencyRecharge(2000, 3600000 * 2.9)).toBe(16);
+  });
+
+  it("tells when it recharges to a value, at the next full hour", () => {
+    const currency = { value: 10, time: 1000 };
+
+    // 4 per hour
+    expect(getCurrencyTime(currency, 0, 90)).toBe(1000 + 20 * 3600000);
+    expect(getCurrencyTime(currency, 0, 91)).toBe(1000 + 21 * 3600000);
+    expect(getCurrencyRecharge(0, getCurrencyTime(currency, 0, 91) - currency.time)).toBe(84);
   });
 
   it("rounds down within the cap", () => {

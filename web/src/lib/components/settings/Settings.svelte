@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { BellIcon, DivideIcon, GlobeIcon, ImageIcon, PercentIcon, SunMoonIcon } from "@lucide/svelte";
+  import { BellIcon, ClockIcon, GlobeIcon, ImageIcon, PercentIcon, SunMoonIcon } from "@lucide/svelte";
   import type { User } from "#lib/utils/api.ts";
   import { ResinCap } from "#lib/db/resin.ts";
   import { isLanguage, Languages, LanguageNames } from "#lib/languages.ts";
@@ -71,6 +71,16 @@
       </Select>
     </Field>
 
+    <Field id="time-zone" icon={ClockIcon} label={m.time_zone()}>
+      <Select
+        id="time-zone"
+        bind:value={() => config.timeZone, (value) => (config.timeZone = value as Config["timeZone"])}
+      >
+        <option value="local">{m.local_time()}</option>
+        <option value="server">{m.server_time()}</option>
+      </Select>
+    </Field>
+
     <Field id="background" icon={ImageIcon} label={m.background()}>
       <Select
         id="background"
@@ -79,18 +89,6 @@
         {#each backgrounds as [value, name] (value)}
           <option {value}>{name()}</option>
         {/each}
-      </Select>
-    </Field>
-
-    <Field id="estimation-mode" icon={DivideIcon} label={m.resin_estimation_mode()}>
-      <Select
-        id="estimation-mode"
-        bind:value={
-          () => config.resinEstimateMode, (value) => (config.resinEstimateMode = value as Config["resinEstimateMode"])
-        }
-      >
-        <option value="time">{m.estimation_mode_time()}</option>
-        <option value="value">{m.estimation_mode_value()}</option>
       </Select>
     </Field>
 

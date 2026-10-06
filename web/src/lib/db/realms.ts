@@ -51,3 +51,8 @@ export function getCurrencyRate(energy: number) {
 export function getCurrencyRecharge(energy: number, ms: number) {
   return Math.floor(ms / 3600000) * getCurrencyRate(energy);
 }
+
+/** When currency recharges to `value`, from the currency at the time of the last change. It recharges once an hour. */
+export function getCurrencyTime(currency: { value: number; time: number }, energy: number, value: number) {
+  return currency.time + Math.ceil((value - currency.value) / getCurrencyRate(energy)) * 3600000;
+}

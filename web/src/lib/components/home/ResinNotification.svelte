@@ -1,28 +1,26 @@
 <script lang="ts">
   import { untrack } from "svelte";
-  import { DateTime } from "luxon";
-  import { ResinCap, ResinPerMinute } from "#lib/db/resin.ts";
+  import { getResinTime, ResinCap } from "#lib/db/resin.ts";
   import { syncNotification } from "#lib/utils/notifications.svelte.ts";
   import { config } from "#lib/session.svelte.ts";
-  import { clock } from "#lib/clock.svelte.ts";
   import { m } from "#lib/paraglide/messages.js";
 
   // color of the Discord message embed
   const NotificationColor = "#63b3ed";
 
   /** Time at which resin reaches the notification threshold. */
-  const capTime = $derived(
-    DateTime.fromMillis(config.resin.time)
-      .plus({ minutes: (config.resinNotifyMark - config.resin.value) / ResinPerMinute })
-      .valueOf(),
-  );
+  const capTime = $derived(getResinTime(config.resin, config.resinNotifyMark));
 
-  // only resin recharging up to the threshold sends a notification, not adding resin (or setting it) to reach it
-  const enabled = $derived(config.resin.value < config.resinNotifyMark && clock.minute < capTime);
-
-  // the message is a new object only when the time or threshold changes, which is when the server is updated
+  // the message is a new object only when the time or threshold changes, which is when the server is updated.
+  // A time that has already passed by then removes the notification: only resin recharging up to the threshold sends
+  // one, not adding resin (or setting it) to reach it, or lowering the threshold below it. Reaching the time later
+  // changes nothing, since the server sends it then, and removing it could stop it from being sent
   const notification = $derived.by(() => {
     const [time, mark] = [capTime, config.resinNotifyMark];
+
+    if (time <= Date.now()) {
+      return null;
+    }
 
     return untrack(() => ({
       key: "resin",
@@ -36,5 +34,5 @@
     }));
   });
 
-  syncNotification("resin", () => (enabled ? notification : null));
+  syncNotification("resin", () => notification);
 </script>

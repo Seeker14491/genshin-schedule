@@ -20,6 +20,11 @@ export function getResinAt(resin: { value: number; time: number }, ms: number) {
   return Math.min(ResinCap, resin.value + getResinRecharge(Math.max(0, ms - resin.time)));
 }
 
+/** When resin recharges to `value`, from the resin at the time of the last change. Only meaningful below the cap. */
+export function getResinTime(resin: { value: number; time: number }, value: number) {
+  return resin.time + ((value - resin.value) / ResinPerMinute) * 60000;
+}
+
 /** Adds resin (or subtracts it, if `delta` is negative). Returns undefined if the result would be below 0 or above the maximum. */
 export function addResin(value: number, delta: number) {
   const result = value + delta;

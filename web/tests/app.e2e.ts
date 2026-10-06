@@ -141,7 +141,7 @@ test("queues the Discord notification only when it changes", async ({ page }) =>
 });
 
 test("only queues the Discord notification for resin recharging to the threshold", async ({ page }) => {
-  // between two minutes, so that a notification due right now would still be in the future of the minute
+  // between two minutes, so that the notification's time is checked to the second
   await page.clock.setFixedTime(Now + 30000);
   const api = await signIn(page, { resin: { value: 100, time: Now }, resinNotifyMark: 160 });
   await page.goto("/home");
@@ -167,6 +167,30 @@ test("only queues the Discord notification for resin recharging to the threshold
   await expect.poll(() => api.find("PUT", "/notifications/resin").length).toBe(2);
 });
 
+test("leaves the Discord notification queued when its time comes", async ({ page }) => {
+  // 160 resin at 30 seconds past the minute
+  const api = await signIn(page, { resin: { value: 159, time: Now - 7.5 * 60000 }, resinNotifyMark: 160 });
+  await page.goto("/home");
+  await expect(resinInput(page)).toHaveValue("159");
+
+  // removing it now could stop the server from sending it
+  await page.clock.setFixedTime(Now + 61000);
+  await expect(resinInput(page)).toHaveValue("160");
+  await page.waitForTimeout(1500);
+
+  expect(api.requests.filter((r) => r.url().includes("/notifications/"))).toHaveLength(0);
+});
+
+test("removes the Discord notification when the threshold is lowered below the resin", async ({ page }) => {
+  // 110 resin by now
+  await signIn(page, { resin: { value: 100, time: Now - 80 * 60000 }, resinNotifyMark: 160 });
+  await page.goto("/settings");
+
+  const remove = page.waitForRequest((r) => r.method() === "DELETE" && r.url().endsWith("/notifications/resin"));
+  await page.getByLabel("Send resin notification at").fill("105");
+  await remove;
+});
+
 test("doesn't queue notifications for users who aren't signed in", async ({ page }) => {
   const api = await useLocally(page, { resin: { value: 100, time: Now }, resinNotifyMark: 160 });
   await page.goto("/home");
@@ -182,12 +206,75 @@ test("loads data stored in the browser by users who aren't signed in", async ({ 
   await page.goto("/home");
 
   await expect(resinInput(page)).toHaveValue("120");
-  await expect(page.getByRole("button", { name: "Europe" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Europe server" })).toBeVisible();
 
   await resinInput(page).fill("90");
   await page.reload();
   await expect(resinInput(page)).toHaveValue("90");
   expect(await page.evaluate(() => JSON.parse(localStorage.getItem("resin")!))).toEqual({ value: 90, time: Now });
+});
+
+test.describe("in Madrid", () => {
+  test.use({ timezoneId: "Europe/Madrid" });
+
+  test("shows local time until server time is chosen, with the server's reset either way", async ({ page }) => {
+    await useLocally(page, { server: "Europe", resin: { value: 20, time: Now } });
+    await page.goto("/home");
+
+    // UTC+2 in summer. Reset is at 4:00 on the server, and resin gains 7.5 an hour
+    const reset = page.getByText("Europe server: Thursday, 13h until reset (117 resin)", { exact: true });
+    await expect(page.getByText("Local time", { exact: true })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /^4:00:00\sPM$/ })).toBeVisible();
+    await expect(reset).toBeVisible();
+
+    await page.goto("/settings");
+    await expect(page.getByLabel("Time zone")).toHaveValue("local");
+    await page.getByLabel("Time zone").selectOption("server");
+    await page.goto("/home");
+
+    // the server is on UTC+1 all year
+    await expect(page.getByText("Time in Teyvat", { exact: true })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /^3:00:00\sPM$/ })).toBeVisible();
+    await expect(reset).toBeVisible();
+  });
+});
+
+test.describe("in British English", () => {
+  test.use({ locale: "en-GB" });
+
+  test("shows 24-hour time, which follows the browser's locale rather than the site's language", async ({ page }) => {
+    await useLocally(page, { resin: { value: 150, time: Now } });
+    await page.goto("/home");
+
+    await expect(page.locator("html")).toHaveAttribute("lang", "en-US");
+    await expect(page.getByRole("heading", { name: "14:00:00" })).toBeVisible();
+    await expect(page.getByText("160 in 1h 20m (15:20)", { exact: true })).toBeVisible();
+  });
+});
+
+test("estimates when resin reaches each multiple of 20", async ({ page }) => {
+  await useLocally(page, { resin: { value: 150, time: Now } });
+  await page.goto("/home");
+
+  await expect(page.getByText(/^\d+ in /)).toHaveText([
+    /^160 in 1h 20m \(3:20\sPM\)$/,
+    /^180 in 4h \(6:00\sPM\)$/,
+    /^200 in 6h 40m \(8:40\sPM\)$/,
+  ]);
+});
+
+test("reaches resin values at the second they're due", async ({ page }) => {
+  // 160 resin at 30 seconds past the minute
+  await useLocally(page, { resin: { value: 159, time: Now - 7.5 * 60000 } });
+  await page.goto("/home");
+
+  await expect(resinInput(page)).toHaveValue("159");
+  // rounded up to the next minute
+  await expect(page.getByText(/^160 in 1m \(2:01\sPM\)$/)).toBeVisible();
+
+  await page.clock.setFixedTime(Now + 31000);
+  await expect(resinInput(page)).toHaveValue("160");
+  await expect(page.getByText(/^160 in /)).toBeHidden();
 });
 
 test("adds and subtracts resin with keyboard shortcuts, whichever buttons there are", async ({ page }) => {

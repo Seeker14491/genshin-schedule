@@ -58,6 +58,11 @@ let starting: Promise<void> | undefined;
 /** Whether the config is synchronized to an account, as opposed to stored in the browser. */
 export const sessionState = $state({ synchronized: false });
 
+/** The auth token of the current session. It differs from the cookie's after signing in or out in another tab. */
+export function getSessionToken() {
+  return session?.token;
+}
+
 /**
  * Loads the config for the user in the auth cookie, unless it's already loaded.
  * Signed-in users' config is downloaded and kept synchronized, and everyone else's is stored in the browser.

@@ -152,6 +152,19 @@ test("saves changes to the account the page shows after another tab switched acc
   expect((await patch).headers().authorization).toBe("Bearer auth-token");
 });
 
+test("queues Discord notifications for the account the page shows after switching in another tab", async ({ page }) => {
+  await signIn(page, { resin: { value: 100, time: Now }, resinNotifyMark: 160 });
+  await page.goto("/home");
+  await expect(resinInput(page)).toHaveValue("100");
+
+  await page.context().addCookies([{ name: "token", value: "other-token", url: "http://localhost:4174" }]);
+
+  const put = page.waitForRequest((r) => r.method() === "PUT" && r.url().endsWith("/notifications/resin"));
+  await resinInput(page).fill("120");
+
+  expect((await put).headers().authorization).toBe("Bearer auth-token");
+});
+
 test("follows signing out in another tab", async ({ page }) => {
   const api = await signIn(page);
   await page.goto("/home");

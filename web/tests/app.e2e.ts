@@ -1,5 +1,5 @@
 import { expect, type Page, test } from "@playwright/test";
-import { FakeApi } from "./api";
+import { ApiUrl, FakeApi } from "./api";
 
 const Now = Date.parse("2026-10-01T14:00:00Z");
 
@@ -163,6 +163,49 @@ test("queues Discord notifications for the account the page shows after switchin
   await resinInput(page).fill("120");
 
   expect((await put).headers().authorization).toBe("Bearer auth-token");
+});
+
+test("loads the other account when another tab switches accounts during loading", async ({ page }) => {
+  const api = await signIn(page, { resin: { value: 100, time: Now } });
+  let switched = false;
+
+  await page.route(`${ApiUrl}/sync`, async (route) => {
+    if (switched) {
+      return route.fallback();
+    }
+
+    switched = true;
+    await page.context().addCookies([{ name: "token", value: "other-token", url: "http://localhost:4174" }]);
+    const data = api.data;
+    api.data = { resin: { value: 30, time: Now } };
+    await route.fulfill({ contentType: "application/json", body: JSON.stringify({ token: api.token, data }) });
+  });
+
+  await page.goto("/home");
+
+  await expect(resinInput(page)).toHaveValue("30");
+  expect(api.find("GET", "/sync").at(-1)!.headers().authorization).toBe("Bearer other-token");
+});
+
+test("keeps another tab's sign-in when the token is rejected during loading", async ({ page }) => {
+  const api = await signIn(page, { resin: { value: 30, time: Now } });
+  let switched = false;
+
+  await page.route(`${ApiUrl}/sync`, async (route) => {
+    if (switched) {
+      return route.fallback();
+    }
+
+    switched = true;
+    await page.context().addCookies([{ name: "token", value: "other-token", url: "http://localhost:4174" }]);
+    await route.fulfill({ status: 401, body: "Unauthorized." });
+  });
+
+  await page.goto("/home");
+
+  await expect(resinInput(page)).toHaveValue("30");
+  expect(api.find("GET", "/sync").at(-1)!.headers().authorization).toBe("Bearer other-token");
+  expect((await page.context().cookies()).find((c) => c.name === "token")?.value).toBe("other-token");
 });
 
 test("follows signing out in another tab", async ({ page }) => {

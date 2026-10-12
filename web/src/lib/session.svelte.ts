@@ -90,14 +90,23 @@ async function start(fetchFn: typeof fetch): Promise<void> {
     let initial;
 
     try {
-      initial = await createApiClient(fetchFn).getSync();
+      initial = await createApiClient(fetchFn, token).getSync();
     } catch (e) {
       if (e instanceof ApiError && e.status === 401) {
-        setAuthToken(undefined);
+        // unless another tab replaced the token in the meantime
+        if (getAuthToken() === token) {
+          setAuthToken(undefined);
+        }
+
         return start(fetchFn);
       }
 
       throw e;
+    }
+
+    // another tab signed in to another account or signed out while loading: load that instead
+    if (getAuthToken() !== token) {
+      return start(fetchFn);
     }
 
     // the server doesn't store defaults until the first change. Keys that aren't part of the config are kept

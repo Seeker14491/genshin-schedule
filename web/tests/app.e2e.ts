@@ -1,5 +1,5 @@
 import { expect, type Page, test } from "@playwright/test";
-import { FakeApi } from "./api";
+import { ApiUrl, FakeApi } from "./api";
 
 const Now = Date.parse("2026-10-01T14:00:00Z");
 
@@ -75,19 +75,162 @@ test("sends changes to the server", async ({ page }) => {
   await expect.poll(() => api.find("PATCH", "/sync").length).toBe(1);
 });
 
-test("replaces local changes with the server's data when another device changed it", async ({ page }) => {
+test("keeps local changes when another device changed other settings", async ({ page }) => {
   const api = await signIn(page, { theme: "light", resin: { value: 100, time: Now } });
   await page.goto("/home");
   await expect(resinInput(page)).toHaveValue("100");
 
   // another device changes the data
   api.token = "elsewhere";
-  api.data = { theme: "dark", resin: { value: 180, time: Now } };
+  api.data = { theme: "dark", resin: { value: 100, time: Now } };
 
   await resinInput(page).fill("50");
 
+  await expect(page.locator("html")).toHaveClass(/dark/);
+  await expect(resinInput(page)).toHaveValue("50");
+
+  // the change is sent again on top of the other device's data
+  await expect.poll(() => api.find("PATCH", "/sync").length).toBe(2);
+  expect(api.find("PATCH", "/sync")[1].postDataJSON()).toMatchObject({ token: "elsewhere" });
+});
+
+test("shows changes made on another device when returning to the page", async ({ page }) => {
+  const api = await signIn(page, { theme: "light", resin: { value: 100, time: Now } });
+  await page.goto("/home");
+  await expect(resinInput(page)).toHaveValue("100");
+
+  // another device changes the data while the page is in the background
+  api.token = "elsewhere";
+  api.data = { theme: "dark", resin: { value: 180, time: Now } };
+
+  await page.evaluate(() => document.dispatchEvent(new Event("visibilitychange")));
+
   await expect(resinInput(page)).toHaveValue("180");
   await expect(page.locator("html")).toHaveClass(/dark/);
+  expect(api.find("GET", "/sync")).toHaveLength(2);
+
+  // the downloaded data isn't sent back
+  await page.waitForTimeout(1000);
+  expect(api.find("PATCH", "/sync")).toHaveLength(0);
+});
+
+test("follows signing in to another account in another tab", async ({ page }) => {
+  const api = await signIn(page, { resin: { value: 100, time: Now } });
+  await page.goto("/home");
+  await expect(resinInput(page)).toHaveValue("100");
+
+  // a change that fails to save
+  api.authStatus = 500;
+  await resinInput(page).fill("50");
+  await expect.poll(() => api.find("PATCH", "/sync").length).toBe(1);
+  api.authStatus = 200;
+
+  await page.context().addCookies([{ name: "token", value: "other-token", url: "http://localhost:4174" }]);
+  api.token = "other-sync";
+  api.data = { resin: { value: 30, time: Now } };
+
+  await page.evaluate(() => document.dispatchEvent(new Event("visibilitychange")));
+
+  await expect(resinInput(page)).toHaveValue("30");
+  expect(api.find("GET", "/sync").at(-1)!.headers().authorization).toBe("Bearer other-token");
+
+  // the first account's change isn't saved to the other account
+  await page.waitForTimeout(1000);
+  expect(api.find("PATCH", "/sync")).toHaveLength(1);
+});
+
+test("saves changes to the account the page shows after another tab switched accounts", async ({ page }) => {
+  await signIn(page, { resin: { value: 100, time: Now } });
+  await page.goto("/home");
+  await expect(resinInput(page)).toHaveValue("100");
+
+  await page.context().addCookies([{ name: "token", value: "other-token", url: "http://localhost:4174" }]);
+
+  const patch = page.waitForRequest((r) => r.method() === "PATCH");
+  await resinInput(page).fill("50");
+
+  expect((await patch).headers().authorization).toBe("Bearer auth-token");
+});
+
+test("queues Discord notifications for the account the page shows after switching in another tab", async ({ page }) => {
+  await signIn(page, { resin: { value: 100, time: Now }, resinNotifyMark: 160 });
+  await page.goto("/home");
+  await expect(resinInput(page)).toHaveValue("100");
+
+  await page.context().addCookies([{ name: "token", value: "other-token", url: "http://localhost:4174" }]);
+
+  const put = page.waitForRequest((r) => r.method() === "PUT" && r.url().endsWith("/notifications/resin"));
+  await resinInput(page).fill("120");
+
+  expect((await put).headers().authorization).toBe("Bearer auth-token");
+});
+
+test("loads the other account when another tab switches accounts during loading", async ({ page }) => {
+  const api = await signIn(page, { resin: { value: 100, time: Now } });
+  let switched = false;
+
+  await page.route(`${ApiUrl}/sync`, async (route) => {
+    if (switched) {
+      return route.fallback();
+    }
+
+    switched = true;
+    await page.context().addCookies([{ name: "token", value: "other-token", url: "http://localhost:4174" }]);
+    const data = api.data;
+    api.data = { resin: { value: 30, time: Now } };
+    await route.fulfill({ contentType: "application/json", body: JSON.stringify({ token: api.token, data }) });
+  });
+
+  await page.goto("/home");
+
+  await expect(resinInput(page)).toHaveValue("30");
+  expect(api.find("GET", "/sync").at(-1)!.headers().authorization).toBe("Bearer other-token");
+});
+
+test("keeps another tab's sign-in when the token is rejected during loading", async ({ page }) => {
+  const api = await signIn(page, { resin: { value: 30, time: Now } });
+  let switched = false;
+
+  await page.route(`${ApiUrl}/sync`, async (route) => {
+    if (switched) {
+      return route.fallback();
+    }
+
+    switched = true;
+    await page.context().addCookies([{ name: "token", value: "other-token", url: "http://localhost:4174" }]);
+    await route.fulfill({ status: 401, body: "Unauthorized." });
+  });
+
+  await page.goto("/home");
+
+  await expect(resinInput(page)).toHaveValue("30");
+  expect(api.find("GET", "/sync").at(-1)!.headers().authorization).toBe("Bearer other-token");
+  expect((await page.context().cookies()).find((c) => c.name === "token")?.value).toBe("other-token");
+});
+
+test("follows signing out in another tab", async ({ page }) => {
+  const api = await signIn(page);
+  await page.goto("/home");
+  await expect(resinInput(page)).toBeVisible();
+
+  await page.context().clearCookies({ name: "token" });
+  await page.evaluate(() => document.dispatchEvent(new Event("visibilitychange")));
+
+  await expect(page).toHaveURL("/");
+  expect(api.find("GET", "/sync")).toHaveLength(1);
+});
+
+test("signs out when the server rejects the token in the background", async ({ page }) => {
+  const api = await signIn(page);
+  await page.goto("/home");
+  await expect(resinInput(page)).toBeVisible();
+
+  api.authStatus = 401;
+  await page.evaluate(() => document.dispatchEvent(new Event("visibilitychange")));
+
+  await expect(page).toHaveURL("/");
+  await expect(page.getByRole("heading", { name: "Genshin Schedule" })).toBeVisible();
+  expect((await page.context().cookies()).find((c) => c.name === "token")).toBeUndefined();
 });
 
 test("signs out when the server rejects the token", async ({ page }) => {

@@ -1,19 +1,23 @@
 import { untrack } from "svelte";
 import type { Notification } from "./api";
 import { createApiClient } from "./auth";
-import { sessionState } from "#lib/session.svelte.ts";
+import { getSessionToken, sessionState } from "#lib/session.svelte.ts";
 
-// pending updates per notification key; kept outside components so navigating away doesn't cancel them
+// pending updates per account and notification key; kept outside components so navigating away doesn't cancel them
 const pending: Record<string, ReturnType<typeof setTimeout>> = {};
 
 function scheduleUpdate(key: string, notification: Notification | null) {
-  clearTimeout(pending[key]);
+  // the notification goes to the account whose data it was made from, even if another tab signs in to another account
+  const token = getSessionToken();
+  const id = `${token} ${key}`;
 
-  pending[key] = setTimeout(async () => {
-    delete pending[key];
+  clearTimeout(pending[id]);
+
+  pending[id] = setTimeout(async () => {
+    delete pending[id];
 
     try {
-      const client = createApiClient();
+      const client = createApiClient(undefined, token);
 
       if (notification) {
         await client.setNotification({

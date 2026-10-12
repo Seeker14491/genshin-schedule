@@ -249,6 +249,20 @@ describe("ConfigSync", () => {
     await vi.advanceTimersByTimeAsync(200);
 
     server.fail = false;
+    await sync.refresh();
+
+    expect(server.data.theme).toBe("dark");
+  });
+
+  it("sends changes that failed to send on top of another device's when refreshing succeeds", async () => {
+    const server = new FakeServer(defaults);
+    const { store, sync } = setup(server);
+
+    server.fail = true;
+    store.set((c) => ({ ...c, theme: "dark" }));
+    await vi.advanceTimersByTimeAsync(200);
+
+    server.fail = false;
     server.changeElsewhere([{ op: "replace", path: "/realmRank", value: 9 }]);
     await sync.refresh();
 

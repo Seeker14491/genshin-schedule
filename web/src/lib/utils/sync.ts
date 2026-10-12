@@ -106,7 +106,16 @@ export class ConfigSync {
   private async pull() {
     const remote = await this.request("refresh", (client) => client.getSync());
 
-    if (remote && remote.token !== this.token && this.receive(remote)) {
+    if (!remote) {
+      return;
+    }
+
+    if (remote.token !== this.token) {
+      this.receive(remote);
+    }
+
+    // including changes that failed to send before, now that the server can be reached
+    if (this.hasUnsentChanges()) {
       this.pending = true;
     }
   }
@@ -123,7 +132,7 @@ export class ConfigSync {
     const result = await this.request("send", (client) => client.patchSync({ token, patch }));
 
     if (!result) {
-      // changes stay unsynchronized and are retried with the next change
+      // changes stay unsynchronized and are retried with the next change or refresh
       return;
     }
 
@@ -136,8 +145,12 @@ export class ConfigSync {
       this.token = result.token;
       this.synced = result.data;
       this.update(this.withDefaults(result.data));
-    } else if (this.receive(result)) {
-      this.pending = true;
+    } else {
+      this.receive(result);
+
+      if (this.hasUnsentChanges()) {
+        this.pending = true;
+      }
     }
   }
 
@@ -153,10 +166,12 @@ export class ConfigSync {
     }
   }
 
-  /**
-   * Replaces the local data with newer data from the server, keeping the settings changed since the last sync.
-   * Returns whether there were such changes, which still need to be sent.
-   */
+  /** Whether settings were changed since the last sync. Defaults the server doesn't have yet don't count. */
+  private hasUnsentChanges() {
+    return changedSettings(this.withDefaults(this.synced), this.store.get()).size > 0;
+  }
+
+  /** Replaces the local data with newer data from the server, keeping the settings changed since the last sync. */
   private receive(remote: WebData) {
     const local = this.store.get() as Record<string, unknown>;
     const changed = changedSettings(this.withDefaults(this.synced), local);
@@ -174,8 +189,6 @@ export class ConfigSync {
     this.token = remote.token;
     this.synced = remote.data;
     this.update(config as Config);
-
-    return changed.size > 0;
   }
 
   /** Sets the store to data that came from the server. */

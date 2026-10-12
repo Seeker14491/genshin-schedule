@@ -75,19 +75,40 @@ test("sends changes to the server", async ({ page }) => {
   await expect.poll(() => api.find("PATCH", "/sync").length).toBe(1);
 });
 
-test("replaces local changes with the server's data when another device changed it", async ({ page }) => {
+test("keeps local changes when another device changed other settings", async ({ page }) => {
   const api = await signIn(page, { theme: "light", resin: { value: 100, time: Now } });
   await page.goto("/home");
   await expect(resinInput(page)).toHaveValue("100");
 
   // another device changes the data
   api.token = "elsewhere";
-  api.data = { theme: "dark", resin: { value: 180, time: Now } };
+  api.data = { theme: "dark", resin: { value: 100, time: Now } };
 
   await resinInput(page).fill("50");
 
+  await expect(page.locator("html")).toHaveClass(/dark/);
+  await expect(resinInput(page)).toHaveValue("50");
+
+  // the change is sent again on top of the other device's data
+  await expect.poll(() => api.find("PATCH", "/sync").length).toBe(2);
+  expect(api.find("PATCH", "/sync")[1].postDataJSON()).toMatchObject({ token: "elsewhere" });
+});
+
+test("shows changes made on another device when returning to the page", async ({ page }) => {
+  const api = await signIn(page, { theme: "light", resin: { value: 100, time: Now } });
+  await page.goto("/home");
+  await expect(resinInput(page)).toHaveValue("100");
+
+  // another device changes the data while the page is in the background
+  api.token = "elsewhere";
+  api.data = { theme: "dark", resin: { value: 180, time: Now } };
+
+  await page.evaluate(() => document.dispatchEvent(new Event("visibilitychange")));
+
   await expect(resinInput(page)).toHaveValue("180");
   await expect(page.locator("html")).toHaveClass(/dark/);
+  expect(api.find("GET", "/sync")).toHaveLength(2);
+  expect(api.find("PATCH", "/sync")).toHaveLength(0);
 });
 
 test("signs out when the server rejects the token", async ({ page }) => {

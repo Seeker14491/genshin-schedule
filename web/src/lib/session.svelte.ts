@@ -100,13 +100,26 @@ async function start(fetchFn: typeof fetch): Promise<void> {
     session?.stop();
     store.set(fillDefaults(initial.data));
 
-    const configSync = new ConfigSync(store, initial, fillDefaults, createApiClient, (error) => {
+    const configSync = new ConfigSync(store, initial, fillDefaults, createApiClient, (error, operation) => {
       console.error(error);
 
-      toaster.error(m.sync_error_title(), m.sync_error_description());
+      // refreshing happens in the background and is retried later, so only failing to save is shown
+      if (operation === "send") {
+        toaster.error(m.sync_error_title(), m.sync_error_description());
+      }
     });
 
-    session = { token, stop: configSync.start() };
+    const stopSync = configSync.start();
+    const stopRefreshing = refreshWhileVisible(() => void configSync.refresh());
+
+    session = {
+      token,
+      stop: () => {
+        stopSync();
+        stopRefreshing();
+      },
+    };
+
     sessionState.synchronized = true;
   } else {
     session?.stop();
@@ -128,6 +141,34 @@ async function start(fetchFn: typeof fetch): Promise<void> {
 
     sessionState.synchronized = false;
   }
+}
+
+/** How often signed-in users' data is downloaded while the page is visible, in case another device changed it. */
+const RefreshInterval = 60 * 1000;
+
+/**
+ * Calls `refresh` when the data may have been changed on another device: when the user returns to the page, when the
+ * connection comes back, and regularly while the page is visible. Returns a function that stops.
+ */
+function refreshWhileVisible(refresh: () => void) {
+  const refreshIfVisible = () => {
+    if (document.visibilityState === "visible") {
+      refresh();
+    }
+  };
+
+  const interval = setInterval(refreshIfVisible, RefreshInterval);
+
+  document.addEventListener("visibilitychange", refreshIfVisible);
+  window.addEventListener("focus", refreshIfVisible);
+  window.addEventListener("online", refreshIfVisible);
+
+  return () => {
+    clearInterval(interval);
+    document.removeEventListener("visibilitychange", refreshIfVisible);
+    window.removeEventListener("focus", refreshIfVisible);
+    window.removeEventListener("online", refreshIfVisible);
+  };
 }
 
 /** Replaces the auth token of the current session, e.g. after changing the username or password. */

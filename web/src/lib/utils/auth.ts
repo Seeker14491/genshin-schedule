@@ -24,7 +24,10 @@ export function setAuthToken(token: string | undefined) {
   }
 }
 
-/** Creates an API client authenticated as the current user. Load functions should pass the `fetch` they are given. */
-export function createApiClient(fetchFn?: typeof fetch) {
-  return new ApiClient(PUBLIC_API_URL, getAuthToken(), fetchFn);
+/**
+ * Creates an API client authenticated as the current user, or with `token`.
+ * Load functions should pass the `fetch` they are given.
+ */
+export function createApiClient(fetchFn?: typeof fetch, token = getAuthToken()) {
+  return new ApiClient(PUBLIC_API_URL, token, fetchFn);
 }

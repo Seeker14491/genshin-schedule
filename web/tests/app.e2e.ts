@@ -114,6 +114,56 @@ test("shows changes made on another device when returning to the page", async ({
   expect(api.find("PATCH", "/sync")).toHaveLength(0);
 });
 
+test("follows signing in to another account in another tab", async ({ page }) => {
+  const api = await signIn(page, { resin: { value: 100, time: Now } });
+  await page.goto("/home");
+  await expect(resinInput(page)).toHaveValue("100");
+
+  // a change that fails to save
+  api.authStatus = 500;
+  await resinInput(page).fill("50");
+  await expect.poll(() => api.find("PATCH", "/sync").length).toBe(1);
+  api.authStatus = 200;
+
+  await page.context().addCookies([{ name: "token", value: "other-token", url: "http://localhost:4174" }]);
+  api.token = "other-sync";
+  api.data = { resin: { value: 30, time: Now } };
+
+  await page.evaluate(() => document.dispatchEvent(new Event("visibilitychange")));
+
+  await expect(resinInput(page)).toHaveValue("30");
+  expect(api.find("GET", "/sync").at(-1)!.headers().authorization).toBe("Bearer other-token");
+
+  // the first account's change isn't saved to the other account
+  await page.waitForTimeout(1000);
+  expect(api.find("PATCH", "/sync")).toHaveLength(1);
+});
+
+test("saves changes to the account the page shows after another tab switched accounts", async ({ page }) => {
+  await signIn(page, { resin: { value: 100, time: Now } });
+  await page.goto("/home");
+  await expect(resinInput(page)).toHaveValue("100");
+
+  await page.context().addCookies([{ name: "token", value: "other-token", url: "http://localhost:4174" }]);
+
+  const patch = page.waitForRequest((r) => r.method() === "PATCH");
+  await resinInput(page).fill("50");
+
+  expect((await patch).headers().authorization).toBe("Bearer auth-token");
+});
+
+test("follows signing out in another tab", async ({ page }) => {
+  const api = await signIn(page);
+  await page.goto("/home");
+  await expect(resinInput(page)).toBeVisible();
+
+  await page.context().clearCookies({ name: "token" });
+  await page.evaluate(() => document.dispatchEvent(new Event("visibilitychange")));
+
+  await expect(page).toHaveURL("/");
+  expect(api.find("GET", "/sync")).toHaveLength(1);
+});
+
 test("signs out when the server rejects the token in the background", async ({ page }) => {
   const api = await signIn(page);
   await page.goto("/home");

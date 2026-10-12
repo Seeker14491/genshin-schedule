@@ -1,4 +1,4 @@
-import { goto } from "$app/navigation";
+import { goto, invalidateAll } from "$app/navigation";
 import { ApiError, isAuthenticated } from "./utils/api";
 import { createApiClient, getAuthToken, setAuthToken } from "./utils/auth";
 import {
@@ -101,29 +101,51 @@ async function start(fetchFn: typeof fetch): Promise<void> {
     session?.stop();
     store.set(fillDefaults(initial.data));
 
-    const configSync = new ConfigSync(store, initial, fillDefaults, createApiClient, (error, operation) => {
+    const current: Session = { token, stop: () => {} };
+
+    /**
+     * When the user signed out or switched accounts in another tab, this tab follows by loading the page again, as it
+     * would when navigating. Returns whether that happened.
+     */
+    const followOtherTab = () => {
+      if (getAuthToken() === current.token) {
+        return false;
+      }
+
+      void invalidateAll();
+      return true;
+    };
+
+    // requests use the session's token rather than the cookie's, so that they can't change another account's data
+    const client = () => createApiClient(undefined, current.token);
+
+    const configSync = new ConfigSync(store, initial, fillDefaults, client, (error, operation) => {
       console.error(error);
 
       // a rejected token (e.g. after the server's secret changed) signs out, as it does when loading.
       // Refreshing happens in the background and is retried later, so only failing to save is shown
       if (error instanceof ApiError && error.status === 401) {
-        void goto("/sign-out");
+        if (!followOtherTab()) {
+          void goto("/sign-out");
+        }
       } else if (operation === "send") {
         toaster.error(m.sync_error_title(), m.sync_error_description());
       }
     });
 
     const stopSync = configSync.start();
-    const stopRefreshing = refreshWhileVisible(() => void configSync.refresh());
+    const stopRefreshing = refreshWhileVisible(() => {
+      if (!followOtherTab()) {
+        void configSync.refresh();
+      }
+    });
 
-    session = {
-      token,
-      stop: () => {
-        stopSync();
-        stopRefreshing();
-      },
+    current.stop = () => {
+      stopSync();
+      stopRefreshing();
     };
 
+    session = current;
     sessionState.synchronized = true;
   } else {
     session?.stop();

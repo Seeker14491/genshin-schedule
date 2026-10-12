@@ -20,6 +20,8 @@ export class ConfigSync {
   private pending = false;
   private refreshPending = false;
   private refreshing = false;
+  private updating = false;
+  private stopped = false;
 
   constructor(
     private readonly store: ConfigStore,
@@ -35,14 +37,23 @@ export class ConfigSync {
     this.synced = initial.data;
   }
 
-  /** Starts watching the store for changes. Returns a function that stops watching. */
+  /**
+   * Starts watching the store for changes. Returns a function that stops synchronizing, after which requests that are
+   * still underway are ignored, so that they can't change the store of the next session.
+   */
   start() {
     const unsubscribe = this.store.subscribe(() => {
+      // data from the server doesn't need to be sent back
+      if (this.updating) {
+        return;
+      }
+
       clearTimeout(this.timeout);
       this.timeout = setTimeout(() => void this.flush(), this.delay);
     });
 
     return () => {
+      this.stopped = true;
       unsubscribe();
       clearTimeout(this.timeout);
     };
@@ -71,7 +82,7 @@ export class ConfigSync {
     this.running = true;
 
     try {
-      while (this.refreshPending || this.pending) {
+      while (!this.stopped && (this.refreshPending || this.pending)) {
         // downloading first means that changes are sent on top of the latest data
         if (this.refreshPending) {
           this.refreshPending = false;
@@ -93,17 +104,10 @@ export class ConfigSync {
   }
 
   private async pull() {
-    let remote;
+    const remote = await this.request("refresh", (client) => client.getSync());
 
-    try {
-      remote = await this.client().getSync();
-    } catch (e) {
-      this.onError(e, "refresh");
-      return;
-    }
-
-    if (remote.token !== this.token) {
-      this.receive(remote);
+    if (remote && remote.token !== this.token && this.receive(remote)) {
+      this.pending = true;
     }
   }
 
@@ -116,13 +120,10 @@ export class ConfigSync {
     }
 
     const token = this.token;
-    let result;
+    const result = await this.request("send", (client) => client.patchSync({ token, patch }));
 
-    try {
-      result = await this.client().patchSync({ token, patch });
-    } catch (e) {
+    if (!result) {
       // changes stay unsynchronized and are retried with the next change
-      this.onError(e, "send");
       return;
     }
 
@@ -134,40 +135,62 @@ export class ConfigSync {
       // would fail the same way, so the server's data replaces them
       this.token = result.token;
       this.synced = result.data;
-      this.store.set(this.withDefaults(result.data));
-    } else {
-      this.receive(result);
+      this.update(this.withDefaults(result.data));
+    } else if (this.receive(result)) {
       this.pending = true;
     }
   }
 
-  /** Replaces the local data with newer data from the server, keeping the settings changed since the last sync. */
-  private receive(remote: WebData) {
-    const changed = reapplyChanges(this.withDefaults(this.synced), this.store.get(), this.withDefaults(remote.data));
-
-    this.token = remote.token;
-    this.synced = remote.data;
-    this.store.set(changed);
-  }
-}
-
-/**
- * Returns `remote` with the settings that differ between `base` and `local` taken from `local`.
- * Each setting is taken as a whole, so that e.g. resin's value and time always come from the same device.
- */
-function reapplyChanges(base: Config, local: Config, remote: Config): Config {
-  const from = local as Record<string, unknown>;
-  const result: Record<string, unknown> = { ...remote };
-
-  for (const { path } of createPatch(base, local)) {
-    const key = Pointer.fromJSON(path).tokens[1];
-
-    if (key in from) {
-      result[key] = from[key];
-    } else {
-      delete result[key];
+  /** Sends a request. Resolves to undefined if it fails, or if synchronization was stopped in the meantime. */
+  private async request<T>(operation: "send" | "refresh", send: (client: SyncClient) => Promise<T>) {
+    try {
+      const result = await send(this.client());
+      return this.stopped ? undefined : result;
+    } catch (e) {
+      if (!this.stopped) {
+        this.onError(e, operation);
+      }
     }
   }
 
-  return result as Config;
+  /**
+   * Replaces the local data with newer data from the server, keeping the settings changed since the last sync.
+   * Returns whether there were such changes, which still need to be sent.
+   */
+  private receive(remote: WebData) {
+    const local = this.store.get() as Record<string, unknown>;
+    const changed = changedSettings(this.withDefaults(this.synced), local);
+    const config: Record<string, unknown> = { ...this.withDefaults(remote.data) };
+
+    // each setting is taken as a whole, so that e.g. resin's value and time always come from the same device
+    for (const key of changed) {
+      if (key in local) {
+        config[key] = local[key];
+      } else {
+        delete config[key];
+      }
+    }
+
+    this.token = remote.token;
+    this.synced = remote.data;
+    this.update(config as Config);
+
+    return changed.size > 0;
+  }
+
+  /** Sets the store to data that came from the server. */
+  private update(config: Config) {
+    this.updating = true;
+
+    try {
+      this.store.set(config);
+    } finally {
+      this.updating = false;
+    }
+  }
+}
+
+/** Returns the top-level keys whose values differ between two configs. */
+function changedSettings(a: object, b: object) {
+  return new Set(createPatch(a, b).map(({ path }) => Pointer.fromJSON(path).tokens[1]));
 }

@@ -1,3 +1,4 @@
+import { goto } from "$app/navigation";
 import { ApiError, isAuthenticated } from "./utils/api";
 import { createApiClient, getAuthToken, setAuthToken } from "./utils/auth";
 import {
@@ -103,8 +104,11 @@ async function start(fetchFn: typeof fetch): Promise<void> {
     const configSync = new ConfigSync(store, initial, fillDefaults, createApiClient, (error, operation) => {
       console.error(error);
 
-      // refreshing happens in the background and is retried later, so only failing to save is shown
-      if (operation === "send") {
+      // a rejected token (e.g. after the server's secret changed) signs out, as it does when loading.
+      // Refreshing happens in the background and is retried later, so only failing to save is shown
+      if (error instanceof ApiError && error.status === 401) {
+        void goto("/sign-out");
+      } else if (operation === "send") {
         toaster.error(m.sync_error_title(), m.sync_error_description());
       }
     });

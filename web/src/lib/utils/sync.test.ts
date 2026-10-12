@@ -228,6 +228,33 @@ describe("ConfigSync", () => {
     expect(server.data).toMatchObject({ realmRank: 9, theme: "dark" });
   });
 
+  it("doesn't send downloaded data back, even when the server doesn't have the defaults", async () => {
+    const server = new FakeServer({ theme: "light" });
+    const { store, sync } = setup(server);
+
+    server.changeElsewhere([{ op: "add", path: "/realmRank", value: 9 }]);
+    await sync.refresh();
+    await vi.advanceTimersByTimeAsync(1000);
+
+    expect(store.get()).toMatchObject({ theme: "light", realmRank: 9 });
+    expect(server.requests).toHaveLength(0);
+  });
+
+  it("sends changes that failed to send once refreshing succeeds", async () => {
+    const server = new FakeServer(defaults);
+    const { store, sync } = setup(server);
+
+    server.fail = true;
+    store.set((c) => ({ ...c, theme: "dark" }));
+    await vi.advanceTimersByTimeAsync(200);
+
+    server.fail = false;
+    server.changeElsewhere([{ op: "replace", path: "/realmRank", value: 9 }]);
+    await sync.refresh();
+
+    expect(server.data).toMatchObject({ theme: "dark", realmRank: 9 });
+  });
+
   it("leaves the data alone when refreshing finds nothing new", async () => {
     const server = new FakeServer(defaults);
     const { store, sync } = setup(server);
@@ -349,6 +376,56 @@ describe("ConfigSync", () => {
 
     expect(server.requests[0].patch).toEqual([{ op: "replace", path: "/theme", value: "dark" }]);
     expect(server.data).toMatchObject({ stats, statRetention: 28, theme: "dark" });
+  });
+
+  it("ignores downloads that finish after stopping", async () => {
+    const server = new FakeServer(defaults);
+    const getSync = server.getSync.bind(server);
+    const { store, sync, onError, stop } = setup(server);
+    const before = store.get();
+
+    server.getSync = async () => {
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      return getSync();
+    };
+
+    server.changeElsewhere([{ op: "replace", path: "/realmRank", value: 9 }]);
+    void sync.refresh();
+    stop();
+    await vi.advanceTimersByTimeAsync(1000);
+
+    expect(server.downloads).toBe(1);
+    expect(store.get()).toBe(before);
+
+    // nor are errors reported
+    server.fail = true;
+    void sync.refresh();
+    await vi.advanceTimersByTimeAsync(1000);
+
+    expect(onError).not.toHaveBeenCalled();
+  });
+
+  it("ignores conflicts that are noticed after stopping, and doesn't start queued requests", async () => {
+    const server = new FakeServer(defaults);
+    const patchSync = server.patchSync.bind(server);
+    const { store, sync, stop } = setup(server);
+
+    server.patchSync = async (request) => {
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      return patchSync(request);
+    };
+
+    server.changeElsewhere([{ op: "replace", path: "/realmRank", value: 9 }]);
+    store.set((c) => ({ ...c, theme: "dark" }));
+    await vi.advanceTimersByTimeAsync(300);
+    void sync.refresh();
+    stop();
+    await vi.advanceTimersByTimeAsync(2000);
+
+    // the next session sets the store, e.g. to the browser's data after signing out
+    expect(store.get()).toMatchObject({ realmRank: defaults.realmRank, theme: "dark" });
+    expect(server.requests).toHaveLength(1);
+    expect(server.downloads).toBe(0);
   });
 
   it("stops watching the store when stopped", async () => {

@@ -108,7 +108,23 @@ test("shows changes made on another device when returning to the page", async ({
   await expect(resinInput(page)).toHaveValue("180");
   await expect(page.locator("html")).toHaveClass(/dark/);
   expect(api.find("GET", "/sync")).toHaveLength(2);
+
+  // the downloaded data isn't sent back
+  await page.waitForTimeout(1000);
   expect(api.find("PATCH", "/sync")).toHaveLength(0);
+});
+
+test("signs out when the server rejects the token in the background", async ({ page }) => {
+  const api = await signIn(page);
+  await page.goto("/home");
+  await expect(resinInput(page)).toBeVisible();
+
+  api.authStatus = 401;
+  await page.evaluate(() => document.dispatchEvent(new Event("visibilitychange")));
+
+  await expect(page).toHaveURL("/");
+  await expect(page.getByRole("heading", { name: "Genshin Schedule" })).toBeVisible();
+  expect((await page.context().cookies()).find((c) => c.name === "token")).toBeUndefined();
 });
 
 test("signs out when the server rejects the token", async ({ page }) => {
